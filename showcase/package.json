@@ -1,0 +1,14 @@
+{
+  "name": "banana-api-tutorial-simpleBot",
+  "repository": "bitbucket:hipchat/banana-api-tutorial",
+  "description": "a sample app",
+  "dependencies": {
+    "@atlaskit/css-reset": "^1.1.4",
+    "@atlaskit/reduced-ui-pack": "^5.5.0",
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "http": "0.0.0",
+    "jwt-simple": "^0.5.1",
+    "request": "^2.72.0"
+  }
+}

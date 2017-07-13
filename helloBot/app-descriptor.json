@@ -9,7 +9,7 @@
   "modules": {
     "chat:bot": [
       {
-        "key": "simple-bot",
+        "key": "hello-bot",
         "mention": {
           "url": "https://740a1ad5.ngrok.io/bot-mention"
         }

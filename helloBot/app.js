@@ -44,7 +44,6 @@ function sendMessage(cloudId, conversationId, messageTxt, callback) {
       callback(err);
     } else {
       var uri = API_BASE_URL + '/site/' + cloudId + '/conversation/' + conversationId + '/message';
-      console.log(uri);
       var options = {
         uri: uri,
         method: 'POST',
@@ -72,11 +71,7 @@ function sendMessage(cloudId, conversationId, messageTxt, callback) {
       }
 
       request(options, function (err, response, body) {
-        if (response.statusCode === 201) {
-          callback(null, body);
-        } else {
-          callback("could not send message: " + JSON.stringify(response));
-        }
+          callback(err, body);
       });
     }
   });

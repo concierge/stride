@@ -1,0 +1,99 @@
+{
+  "baseUrl": "https://740a1ad5.ngrok.io",
+  "key": "TanguyBot5",
+  "addonUserID": "655363:32c3e008-aa3c-4d41-800a-5b1047cdf93e",
+  "lifecycle": {
+    "installed": "/installed",
+    "uninstalled": "/uninstalled"
+  },
+  "modules": {
+    "chat:bot": [
+      {
+        "key": "showcase-bot",
+        "mention": {
+          "url": "https://740a1ad5.ngrok.io/bot-mention"
+        }
+      }
+    ],
+    "chat:inputAction": [
+      {
+        "key": "showcase-input-action",
+        "name": {
+          "value": "Open App Dialog"
+        },
+        "target": "showcase-dialog"
+      }
+    ],
+    "chat:dialog": [
+      {
+        "key": "showcase-dialog",
+        "title": {
+          "value": "App Dialog"
+        },
+        "options": {
+          "size": {
+            "width": "500px",
+            "height": "300px"
+          },
+          "primaryAction":  {
+            "key": "action-appendMessage",
+            "name": {
+              "value": "Append Message"
+            }
+          },
+          "secondaryActions": [
+            {
+              "key": "action-close",
+              "name": {
+                "value": "Close"
+              }
+            },
+            {
+              "key": "action-openSidebar",
+              "name": {
+                "value": "Open Sidebar"
+              }
+            }
+          ]
+        },
+        "url": "https://740a1ad5.ngrok.io/module/dialog",
+        "authentication": "jwt"
+
+      }
+    ],
+    "chat:sidebar": [
+      {
+        "key": "showcase-sidebar",
+        "name": {
+          "value": "App Sidebar"
+        },
+        "url": "https://740a1ad5.ngrok.io/module/sidebar",
+        "authentication": "jwt"
+      }
+    ],
+    "chat:glance": [
+      {
+        "key": "showcase-glance",
+        "name": {
+          "value": "App Glance"
+        },
+        "icon": {
+          "url": "http://www.freeiconspng.com/uploads/team-icon-21.png",
+          "url@2x": "http://www.freeiconspng.com/uploads/team-icon-21.png"
+        },
+        "target": "showcase-sidebar",
+        "queryUrl": "https://740a1ad5.ngrok.io/module/glance/state"
+      }
+    ],
+    "chat:messageAction" :[
+      {
+        "key": "showcase-message-action",
+        "name": {
+          "value": "Send to Dialog"
+        },
+        "target": "showcase-dialog"
+      }
+    ]
+  }
+}
+

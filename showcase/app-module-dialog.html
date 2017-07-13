@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your page</title>
+  <link rel="stylesheet" href="node_modules/@atlaskit/css-reset/dist/bundle.css" />
+  <link rel="stylesheet" href="node_modules/@atlaskit/reduced-ui-pack/dist/bundle.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src='https://www.hipchat.com/atlassian-connect/all.js'></script>
+  <script>
+    $(document).ready(function(){
+      AP.register({
+        "dialog-button-click": function(event, closeDialog) {
+          console.log('button clicked')
+          if (event.action === "action-openSidebar") {
+            AP.sidebar.open({key:'showcase-sidebar'});
+            closeDialog(false);
+          }
+          if (event.action === "action-appendMessage") {
+            AP.chat.appendMessage($("#message").val());
+            closeDialog(false);
+          }
+          if (event.action === "action-close") {
+            closeDialog(true);
+          }
+        }
+      })
+    });
+  </script>
+</head>
+<body>
+<p>Blanditiis voluptatum perspiciatis doloribus dignissimos accusamus commodi, nobis ut, error iusto,
+  quas vitae nesciunt consequatur possimus labore!</p>
+<form>
+  <div class="ak-field-group">
+    <label for="message">Text to append to chat</label>
+    <input type="text" class="ak-field-text" id="message" name="message" placeholder="G'day mate!" autofocus>
+  </div>
+</form>
+
+</body>
+</html>

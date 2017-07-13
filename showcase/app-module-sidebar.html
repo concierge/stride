@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your page</title>
+  <link rel="stylesheet" href="node_modules/@atlaskit/css-reset/dist/bundle.css"/>
+  <link rel="stylesheet" href="node_modules/@atlaskit/reduced-ui-pack/dist/bundle.css"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src='https://www.hipchat.com/atlassian-connect/all.js'></script>
+  <script>
+    $(document).ready(function () {
+      $("#openDialog").click(function () {
+        AP.dialog.open({key: "showcase-dialog"});
+      });
+
+      $("#pingApp").click(function () {
+        AP.auth.withToken(function (err, token) {
+          $.ajax(
+              {
+                type: 'POST',
+                url: '/ui/ping',
+                headers: {'Authorization': 'JWT ' + token},
+                dataType: 'json',
+                data: {},
+                success: function (data) {
+                  $("#info").text('Response from the app backend: ' + data.status);
+                },
+                error: function (data) {
+                  console.log(data);
+                }
+              });
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+<p>Blanditiis voluptatum perspiciatis doloribus dignissimos accusamus commodi, nobis ut, error iusto,
+  quas vitae nesciunt consequatur possimus labore!</p>
+
+<p>Blanditiis voluptatum perspiciatis doloribus dignissimos accusamus commodi, nobis ut, error iusto,
+  quas vitae nesciunt consequatur possimus labore!</p>
+
+<p>
+
+  <button type="button" id="openDialog" class="ak-button ak-button__appearance-default">Open dialog</button>
+  <button type="button" id="pingApp" class="ak-button ak-button__appearance-default">Ping app</button>
+<p id="info"/>
+</p>
+</body>
+</html>
