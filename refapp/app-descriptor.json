@@ -6,10 +6,11 @@
     "installed": "/installed",
     "uninstalled": "/uninstalled"
   },
+
   "modules": {
     "chat:bot": [
       {
-        "key": "showcase-bot",
+        "key": "refapp-bot",
         "mention": {
           "url": "https://740a1ad5.ngrok.io/bot-mention"
         }
@@ -17,16 +18,16 @@
     ],
     "chat:inputAction": [
       {
-        "key": "showcase-input-action",
+        "key": "refapp-input-action",
         "name": {
           "value": "Open App Dialog"
         },
-        "target": "showcase-dialog"
+        "target": "refapp-dialog"
       }
     ],
     "chat:dialog": [
       {
-        "key": "showcase-dialog",
+        "key": "refapp-dialog",
         "title": {
           "value": "App Dialog"
         },
@@ -58,12 +59,39 @@
         },
         "url": "https://740a1ad5.ngrok.io/module/dialog",
         "authentication": "jwt"
-
+      },
+      {
+        "key": "refapp-config",
+        "title": {
+          "value": "App Configuration"
+        },
+        "options": {
+          "size": {
+            "width": "500px",
+            "height": "300px"
+          },
+          "primaryAction":  {
+            "key": "action-save",
+            "name": {
+              "value": "Save"
+            }
+          },
+          "secondaryActions": [
+            {
+              "key": "action-close",
+              "name": {
+                "value": "Close"
+              }
+            }
+          ]
+        },
+        "url": "https://740a1ad5.ngrok.io/module/config",
+        "authentication": "jwt"
       }
     ],
     "chat:sidebar": [
       {
-        "key": "showcase-sidebar",
+        "key": "refapp-sidebar",
         "name": {
           "value": "App Sidebar"
         },
@@ -73,7 +101,7 @@
     ],
     "chat:glance": [
       {
-        "key": "showcase-glance",
+        "key": "refapp-glance",
         "name": {
           "value": "App Glance"
         },
@@ -81,17 +109,17 @@
           "url": "http://www.freeiconspng.com/uploads/team-icon-21.png",
           "url@2x": "http://www.freeiconspng.com/uploads/team-icon-21.png"
         },
-        "target": "showcase-sidebar",
+        "target": "refapp-sidebar",
         "queryUrl": "https://740a1ad5.ngrok.io/module/glance/state"
       }
     ],
     "chat:messageAction" :[
       {
-        "key": "showcase-message-action",
+        "key": "refapp-message-action",
         "name": {
           "value": "Send to Dialog"
         },
-        "target": "showcase-dialog"
+        "target": "refapp-dialog"
       }
     ]
   }

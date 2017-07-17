@@ -4,6 +4,13 @@ var API_AUDIENCE = "api.stg.atlassian.com";
 
 module.exports = function(app) {
 
+  /**
+   * Functions to call the Stride Javascript API
+   */
+
+  /**
+   * Get an access token from the Atlassian Identity API
+   */
   function getAccessToken(callback) {
     var options = {
       uri: 'https://atlassian-account-stg.pus2.auth0.com/oauth/token',
@@ -24,6 +31,9 @@ module.exports = function(app) {
     });
   }
 
+  /**
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-conversationId-message-post
+   */
   function sendMessage(cloudId, conversationId, messageBody, callback) {
     getAccessToken(function (err, accessToken) {
       if (err) {
@@ -49,6 +59,9 @@ module.exports = function(app) {
     });
   }
 
+  /**
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-user-userId-message-post
+   */
   function sendUserMessage(token, cloudId, userId, message, callback) {
     var options = {
       uri: API_BASE_URL + '/site/' + cloudId + '/conversation/user/' + userId + '/message',
@@ -66,6 +79,9 @@ module.exports = function(app) {
     });
   }
 
+  /**
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-conversationId-get
+   */
   function getConversation(token, cloudId, conversationId, callback) {
     var options = {
       uri: API_BASE_URL + '/site/' + cloudId + '/conversation/' + conversationId,
@@ -80,6 +96,9 @@ module.exports = function(app) {
     });
   }
 
+  /**
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-Users-userId-get
+   */
   function getUser(token, cloudId, userId, callback) {
     var options = {
       uri: API_BASE_URL + '/site/' + cloudId + '/user/' + userId,
@@ -94,7 +113,10 @@ module.exports = function(app) {
     });
   }
 
-  function createRoom(token, cloudId, name, privacy, topic, callback) {
+  /*
+  * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-post
+   */
+  function createConversation(token, cloudId, name, privacy, topic, callback) {
     var body = {
       name: name,
       privacy: privacy,
@@ -114,8 +136,10 @@ module.exports = function(app) {
     });
   }
 
-
-  function archiveRoom(token, cloudId, conversationId, callback) {
+  /**
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-conversationId-archive-put
+   */
+  function archiveConversation(token, cloudId, conversationId, callback) {
 
     var options = {
       uri: API_BASE_URL + '/site/' + cloudId + '/conversation/' + conversationId + '/archive',
@@ -130,6 +154,9 @@ module.exports = function(app) {
     });
   }
 
+  /**
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-conversationId-message-get
+   */
   function getConversationHistory(token, cloudId, conversationId, callback) {
     var options = {
       uri: API_BASE_URL + '/site/' + cloudId + '/conversation/' + conversationId + "/message?limit=5",
@@ -144,6 +171,9 @@ module.exports = function(app) {
     });
   }
 
+  /**
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-conversationId-roster-get
+   */
   function getConversationRoster(token, cloudId, conversationId, callback) {
     var options = {
       uri: API_BASE_URL + '/site/' + cloudId + '/conversation/' + conversationId + "/roster",
@@ -155,6 +185,65 @@ module.exports = function(app) {
     }
     request(options, function (err, response, body) {
       callback(err, JSON.parse(body));
+    });
+  }
+
+  /**
+   * Utility functions
+   */
+
+  function sendTextMessage(cloudId, conversationId, messageTxt, callback) {
+    var message = {
+      version: 1,
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: messageTxt
+            }
+          ]
+        }
+      ]
+    };
+    sendMessage(cloudId, conversationId, message, callback);
+  }
+
+  function sendDocumentReply(message, reply, callback) {
+    var cloudId = message.cloudId;
+    var conversationId = message.conversation.id;
+    var userId = message.sender.id;
+
+    sendMessage(cloudId, conversationId, reply, function (err, response) {
+      callback(err, response);
+    });
+  }
+
+  function sendTextReply(message, replyTxt, callback) {
+    var cloudId = message.cloudId;
+    var conversationId = message.conversation.id;
+    var userId = message.sender.id;
+
+    var reply = {
+      version: 1,
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: replyTxt
+            }
+          ]
+        }
+      ]
+    };
+
+    sendMessage(cloudId, conversationId, reply, function (err, response) {
+      callback(err, response);
     });
   }
 
@@ -170,67 +259,18 @@ module.exports = function(app) {
 
     getUser: getUser,
 
-    createRoom: createRoom,
+    createConversation: createConversation,
 
-    archiveRoom: archiveRoom,
+    archiveConversation: archiveConversation,
 
     getConversationHistory: getConversationHistory,
 
     getConversationRoster: getConversationRoster,
 
-    sendTextMessage: function (cloudId, conversationId, messageTxt, callback) {
-      var message = {
-        version: 1,
-            type: "doc",
-            content: [
-          {
-            type: "paragraph",
-            content: [
-              {
-                type: "text",
-                text: messageTxt
-              }
-            ]
-          }
-        ]
-      };
-      sendMessage(cloudId, conversationId, message, callback);
-    },
+    sendTextMessage: sendTextMessage,
 
-    sendDocumentReply: function (message, reply, callback) {
-      var cloudId = message.cloudId;
-      var conversationId = message.conversation.id;
-      var userId = message.sender.id;
+    sendDocumentReply: sendDocumentReply,
 
-      sendMessage(cloudId, conversationId, reply, function (err, response) {
-          callback(err, response);
-      });
-    },
-
-    sendTextReply: function (message, replyTxt, callback) {
-      var cloudId = message.cloudId;
-      var conversationId = message.conversation.id;
-      var userId = message.sender.id;
-
-      var reply = {
-        version: 1,
-        type: "doc",
-        content: [
-          {
-            type: "paragraph",
-            content: [
-              {
-                type: "text",
-                text: replyTxt
-              }
-            ]
-          }
-        ]
-      };
-
-      sendMessage(cloudId, conversationId, reply, function (err, response) {
-          callback(err, response);
-      });
-    }
+    sendTextReply: sendTextReply
   }
 };
