@@ -26,6 +26,7 @@ if (!PORT || !app.clientId || !app.clientSecret) {
  * Simple library that wraps the Stride REST API
  */
 var stride = require('./stride')(app);
+var sampleMessages = require('./sampleMessages')();
 
 /**
  * This implementation doesn't make any assumption in terms of data store, frameworks used, etc.
@@ -142,12 +143,14 @@ function validateJWT(req, res, next) {
  *     }
  *   }
  * ]
+ *
+ * Check out sampleMessages.js to see how the message sent as a reply to this mention is constructed
  */
 
 express.post('/bot-mention',
     function (req, res) {
       console.log('bot mention');
-      stride.sendTextReply(req.body,  "Hey, what's up?", function (err, response) {
+      stride.sendDocumentReply(req.body,  sampleMessages.getSampleMessage(), function (err, response) {
         if (err) {
           console.log(err);
           res.sendStatus(500);
@@ -157,6 +160,8 @@ express.post('/bot-mention',
       });
     }
 );
+
+
 
 /**
  * chat:configuration
