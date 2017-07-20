@@ -1,3 +1,5 @@
+var _ = require('lodash');
+var fs = require('fs');
 var expressLib = require('express');
 var bodyParser = require('body-parser');
 var jwtUtil = require('jwt-simple');
@@ -6,19 +8,18 @@ var request = require('request');
 var cors = require('cors');
 var express = expressLib();
 express.use(bodyParser.json());
-express.use(bodyParser.urlencoded({
-  extended: true
-}));
+express.use(bodyParser.urlencoded({extended: true}));
 express.use(expressLib.static('.'));
 
 var PORT = process.env.PORT;
 var app = {};
 app.clientId = process.env.CLIENT_ID;
 app.clientSecret = process.env.CLIENT_SECRET;
+app.userId = process.env.USER_ID;
 
-if (!PORT || !app.clientId || !app.clientSecret) {
+if (!PORT || !app.clientId || !app.clientSecret || !app.userId) {
   console.log ("Usage:");
-  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> node.js");
+  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> USER_ID=<app user ID> node app.js");
   process.exit();
 }
 
@@ -55,7 +56,7 @@ express.post('/installed',
       var userId = req.body.userId;
 
       //Store the installation details
-      if(!installationStore[conversationId]) {
+      if (!installationStore[conversationId]) {
         installationStore[conversationId] = {
           cloudId: cloudId,
           conversationId: conversationId,
@@ -64,8 +65,8 @@ express.post('/installed',
       }
 
       //Send a message to the conversation to announce the app is ready
-      stride.sendMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function(err, response){
-        if(err)
+      stride.sendTextMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function (err, response) {
+        if (err)
           console.log(err);
       });
       res.sendStatus(204);
@@ -105,8 +106,8 @@ function validateJWT(req, res, next) {
 
     //Extract the JWT token from the request header
     var encodedJwt = req.query['signed_request']
-        ||req.headers['authorization'].substring(4)
-        ||req.headers['Authorization'].substring(4);
+        || req.headers['authorization'].substring(4)
+        || req.headers['Authorization'].substring(4);
 
     // Decode the base64-encoded token, which contains the context of the call
     var jwt = jwtUtil.decode(encodedJwt, null, true);
@@ -150,7 +151,7 @@ function validateJWT(req, res, next) {
 express.post('/bot-mention',
     function (req, res) {
       console.log('bot mention');
-      stride.sendDocumentReply(req.body,  sampleMessages.getSampleMessage(), function (err, response) {
+      stride.sendDocumentReply(req.body, sampleMessages.getSampleMessage(), function (err, response) {
         if (err) {
           console.log(err);
           res.sendStatus(500);
@@ -160,7 +161,6 @@ express.post('/bot-mention',
       });
     }
 );
-
 
 
 /**
@@ -284,8 +284,8 @@ express.post('/ui/ping',
       console.log('Received a call from the app frontend ' + JSON.stringify(req.body));
       var cloudId = res.locals.context.cloudId;
       var conversationId = res.locals.context.conversationId;
-      stride.sendTextMessage(cloudId, conversationId, "Pong", function(err, response) {
-        if(!err)
+      stride.sendTextMessage(cloudId, conversationId, "Pong", function (err, response) {
+        if (!err)
           res.send(JSON.stringify({status: "Pong"}));
         else
           res.send(JSON.stringify({status: "Failed"}));
@@ -293,6 +293,25 @@ express.post('/ui/ping',
 
     }
 );
+
+
+/**
+ * Your app has a descriptor (app-descriptor.json), which tells Stride about the modules it uses.
+ *
+ * The variable ${host} is substituted based on the base URL of your app.
+ */
+
+express.get('/descriptor', function (req, res) {
+  fs.readFile('./app-descriptor.json', function (err, descriptorTemplate) {
+    var template = _.template(descriptorTemplate);
+    var descriptor = template({
+      host: 'https://' + req.headers.host,
+      appUserId: app.userId
+    });
+    res.set('Content-Type', 'application/json');
+    res.send(descriptor);
+  });
+});
 
 
 http.createServer(express).listen(PORT, function () {

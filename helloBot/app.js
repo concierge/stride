@@ -1,14 +1,17 @@
 var PORT = process.env.PORT;
 var CLIENT_ID = process.env.CLIENT_ID;
 var CLIENT_SECRET = process.env.CLIENT_SECRET;
+var USER_ID = process.env.USER_ID;
 var API_BASE_URL = 'https://api.stg.atlassian.com';
 
-if (!PORT || !CLIENT_ID || !CLIENT_SECRET) {
+if (!PORT || !CLIENT_ID || !CLIENT_SECRET || !USER_ID) {
   console.log ("Usage:");
-  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> node.js");
+  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> USER_ID=<app user ID> node.js");
   process.exit();
 }
 
+var _ = require('lodash');
+var fs = require('fs');
 var express = require('express');
 var bodyParser = require('body-parser');
 var http = require('http');
@@ -120,6 +123,20 @@ app.post('/bot-mention',
     }
 );
 
+/**
+ * Don't worry about this for now.
+ */
+app.get('/descriptor', function (req, res) {
+  fs.readFile('./app-descriptor.json', function (err, descriptorTemplate) {
+    var template = _.template(descriptorTemplate);
+    var descriptor = template({
+      host: 'https://' + req.headers.host,
+      appUserId: USER_ID
+    });
+    res.set('Content-Type', 'application/json');
+    res.send(descriptor);
+  });
+});
 
 http.createServer(app).listen(PORT, function () {
   console.log('App running on port ' + PORT);

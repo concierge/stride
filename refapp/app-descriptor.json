@@ -1,7 +1,7 @@
 {
-  "baseUrl": "https://740a1ad5.ngrok.io",
-  "key": "TanguyBot5",
-  "addonUserID": "655363:32c3e008-aa3c-4d41-800a-5b1047cdf93e",
+  "baseUrl": "${host}",
+  "key": "refapp",
+  "addonUserID": "${appUserId}",
   "lifecycle": {
     "installed": "/installed",
     "uninstalled": "/uninstalled"
@@ -12,7 +12,10 @@
       {
         "key": "refapp-bot",
         "mention": {
-          "url": "https://740a1ad5.ngrok.io/bot-mention"
+          "url": "/bot-mention"
+        },
+        "directMessage": {
+          "url": "/bot-mention"
         }
       }
     ],
@@ -57,7 +60,7 @@
             }
           ]
         },
-        "url": "https://740a1ad5.ngrok.io/module/dialog",
+        "url": "/module/dialog",
         "authentication": "jwt"
       },
       {
@@ -85,7 +88,7 @@
             }
           ]
         },
-        "url": "https://740a1ad5.ngrok.io/module/config",
+        "url": "/module/config",
         "authentication": "jwt"
       }
     ],
@@ -95,7 +98,7 @@
         "name": {
           "value": "App Sidebar"
         },
-        "url": "https://740a1ad5.ngrok.io/module/sidebar",
+        "url": "/module/sidebar",
         "authentication": "jwt"
       }
     ],
@@ -106,11 +109,11 @@
           "value": "App Glance"
         },
         "icon": {
-          "url": "http://www.freeiconspng.com/uploads/team-icon-21.png",
-          "url@2x": "http://www.freeiconspng.com/uploads/team-icon-21.png"
+          "url": "/team-icon-21.png",
+          "url@2x": "/team-icon-21.png"
         },
         "target": "refapp-sidebar",
-        "queryUrl": "https://740a1ad5.ngrok.io/module/glance/state"
+        "queryUrl": "/module/glance/state"
       }
     ],
     "chat:messageAction" :[
