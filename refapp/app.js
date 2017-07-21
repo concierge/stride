@@ -6,7 +6,7 @@ var jwtUtil = require('jwt-simple');
 var http = require('http');
 var request = require('request');
 var cors = require('cors');
-var jsonpath = require('JSONPath');
+var jsonpath = require('jsonpath');
 var express = expressLib();
 express.use(bodyParser.json());
 express.use(bodyParser.urlencoded({extended: true}));
@@ -152,11 +152,22 @@ function validateJWT(req, res, next) {
 express.post('/bot-mention',
     function (req, res) {
       console.log('bot mention');
-      var mentions = jsonpath({json: req.body.message.body, path: '$..[?(@.type == "mention")]', callback: function(response) {
-        console.log("users mentioned: " );
-      }});
 
-      stride.sendDocumentReply(req.body, sampleMessages.getSampleMessage(), function (err, response) {
+      // Here's how to extract the list of users who were mentioned in this message
+      var mentions = [];
+      var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
+      mentionNodes.forEach(function(mentionNode){
+        if(mentionNode.attrs.id !== app.userId) {
+          //excluding the bot mention
+          mentions.push({
+            userId: mentionNode.attrs.id,
+            userAlias: mentionNode.attrs.text
+          });
+        }
+      })
+
+      var reply = sampleMessages.getSampleMessage(mentions);
+      stride.sendDocumentReply(req.body, reply, function (err, response) {
         if (err) {
           console.log(err);
           res.sendStatus(500);
