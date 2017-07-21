@@ -1,6 +1,6 @@
 var request = require('request');
-var API_BASE_URL = 'https://api.stg.atlassian.com';
-var API_AUDIENCE = "api.stg.atlassian.com";
+var API_BASE_URL = 'https://api.atlassian.com';
+var API_AUDIENCE = "api.atlassian.com";
 
 module.exports = function(app) {
 
@@ -13,7 +13,7 @@ module.exports = function(app) {
    */
   function getAccessToken(callback) {
     var options = {
-      uri: 'https://atlassian-account-stg.pus2.auth0.com/oauth/token',
+      uri: 'https://auth.atlassian.com/oauth/token',
       method: 'POST',
       json: {
         grant_type: "client_credentials",

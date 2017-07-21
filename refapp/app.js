@@ -6,6 +6,7 @@ var jwtUtil = require('jwt-simple');
 var http = require('http');
 var request = require('request');
 var cors = require('cors');
+var jsonpath = require('JSONPath');
 var express = expressLib();
 express.use(bodyParser.json());
 express.use(bodyParser.urlencoded({extended: true}));
@@ -151,6 +152,10 @@ function validateJWT(req, res, next) {
 express.post('/bot-mention',
     function (req, res) {
       console.log('bot mention');
+      var mentions = jsonpath({json: req.body.message.body, path: '$..[?(@.type == "mention")]', callback: function(response) {
+        console.log("users mentioned: " );
+      }});
+
       stride.sendDocumentReply(req.body, sampleMessages.getSampleMessage(), function (err, response) {
         if (err) {
           console.log(err);

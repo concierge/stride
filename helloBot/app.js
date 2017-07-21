@@ -2,7 +2,7 @@ var PORT = process.env.PORT;
 var CLIENT_ID = process.env.CLIENT_ID;
 var CLIENT_SECRET = process.env.CLIENT_SECRET;
 var USER_ID = process.env.USER_ID;
-var API_BASE_URL = 'https://api.stg.atlassian.com';
+var API_BASE_URL = 'https://api.atlassian.com';
 
 if (!PORT || !CLIENT_ID || !CLIENT_SECRET || !USER_ID) {
   console.log ("Usage:");
@@ -23,13 +23,13 @@ app.use(express.static('.'));
 
 function getAccessToken(callback) {
   var options = {
-    uri: 'https://atlassian-account-stg.pus2.auth0.com/oauth/token',
+    uri: 'https://auth.atlassian.com/oauth/token',
     method: 'POST',
     json: {
       grant_type: "client_credentials",
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
-      "audience": "api.stg.atlassian.com"
+      "audience": "api.atlassian.com"
     }
   };
   request(options, function (err, response, body) {
