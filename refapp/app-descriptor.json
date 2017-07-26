@@ -132,7 +132,8 @@
         },
         "state": {
           "url": "/module/config/state"
-        }
+        },
+        "authentication": "jwt"
       }
     ]
   }

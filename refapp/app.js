@@ -105,7 +105,7 @@ function validateJWT(req, res, next) {
     console.log('validating JWT: ' + JSON.stringify(req.headers));
 
     //Extract the JWT token from the request header
-    var encodedJwt = req.query['signed_request']
+    var encodedJwt = req.query['jwt']
         || req.headers['authorization'].substring(4)
         || req.headers['Authorization'].substring(4);
 
@@ -184,7 +184,7 @@ express.post('/bot-mention',
  */
 
 express.get('/module/config',
-    //validateJWT,
+    validateJWT,
     function (req, res) {
       res.redirect("/app-module-config.html");
     });
@@ -199,7 +199,6 @@ express.get('/module/config/state',
       var state = {configured: true};
       if (!config)
         state.configured = false;
-      console.log(state);
       res.send(JSON.stringify(state));
     });
 
@@ -229,7 +228,7 @@ express.post('/module/config/content',
 
 
 express.get('/module/dialog',
-    //validateJWT,
+    validateJWT,
     function (req, res) {
       res.redirect("/app-module-dialog.html");
     });
@@ -262,9 +261,8 @@ express.get('/module/dialog',
 
 express.get('/module/glance/state',
     cors(),
-    //validateJWT,
+    validateJWT,
     function (req, res) {
-      console.log("loading glance state")
       res.send(
           JSON.stringify({
             "label": {
@@ -295,7 +293,7 @@ function updateGlance() {
  **/
 
 express.get('/module/sidebar',
-    //validateJWT,
+    validateJWT,
     function (req, res) {
       res.redirect("/app-module-sidebar.html");
     });
