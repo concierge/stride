@@ -1,7 +1,6 @@
 {
   "baseUrl": "${host}",
   "key": "refapp",
-  "addonUserID": "${appUserId}",
   "lifecycle": {
     "installed": "/installed",
     "uninstalled": "/uninstalled"

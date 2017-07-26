@@ -195,13 +195,14 @@ module.exports = function (app) {
       };
       mentions.forEach(function (mention) {
 
-        mentionsParagraph.content.push({
-          "type": "mention",
-          "attrs": {
-            id: mention.userId,
-            text: mention.userAlias
-          }
-        })
+        // Need to find a way to exclude the bot user before enabling this: infinite loop
+        //mentionsParagraph.content.push({
+        //  "type": "mention",
+        //  "attrs": {
+        //    id: mention.userId,
+        //    text: mention.userAlias
+        //  }
+        //})
 
       })
 

@@ -16,11 +16,10 @@ var PORT = process.env.PORT;
 var app = {};
 app.clientId = process.env.CLIENT_ID;
 app.clientSecret = process.env.CLIENT_SECRET;
-app.userId = process.env.USER_ID;
 
-if (!PORT || !app.clientId || !app.clientSecret || !app.userId) {
+if (!PORT || !app.clientId || !app.clientSecret) {
   console.log ("Usage:");
-  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> USER_ID=<app user ID> node app.js");
+  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> node app.js");
   process.exit();
 }
 
@@ -156,14 +155,12 @@ express.post('/bot-mention',
       // Here's how to extract the list of users who were mentioned in this message
       var mentions = [];
       var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
-      mentionNodes.forEach(function(mentionNode){
-        if(mentionNode.attrs.id !== app.userId) {
-          //excluding the bot mention
-          mentions.push({
-            userId: mentionNode.attrs.id,
-            userAlias: mentionNode.attrs.text
-          });
-        }
+      mentionNodes.forEach(function (mentionNode) {
+        mentions.push({
+          userId: mentionNode.attrs.id,
+          userAlias: mentionNode.attrs.text
+        });
+
       })
 
       var reply = sampleMessages.getSampleMessage(mentions);
@@ -321,8 +318,7 @@ express.get('/descriptor', function (req, res) {
   fs.readFile('./app-descriptor.json', function (err, descriptorTemplate) {
     var template = _.template(descriptorTemplate);
     var descriptor = template({
-      host: 'https://' + req.headers.host,
-      appUserId: app.userId
+      host: 'https://' + req.headers.host
     });
     res.set('Content-Type', 'application/json');
     res.send(descriptor);

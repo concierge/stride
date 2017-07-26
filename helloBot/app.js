@@ -1,12 +1,11 @@
 var PORT = process.env.PORT;
 var CLIENT_ID = process.env.CLIENT_ID;
 var CLIENT_SECRET = process.env.CLIENT_SECRET;
-var USER_ID = process.env.USER_ID;
 var API_BASE_URL = 'https://api.atlassian.com';
 
-if (!PORT || !CLIENT_ID || !CLIENT_SECRET || !USER_ID) {
+if (!PORT || !CLIENT_ID || !CLIENT_SECRET) {
   console.log ("Usage:");
-  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> USER_ID=<app user ID> node.js");
+  console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> node app.js");
   process.exit();
 }
 
@@ -130,8 +129,7 @@ app.get('/descriptor', function (req, res) {
   fs.readFile('./app-descriptor.json', function (err, descriptorTemplate) {
     var template = _.template(descriptorTemplate);
     var descriptor = template({
-      host: 'https://' + req.headers.host,
-      appUserId: USER_ID
+      host: 'https://' + req.headers.host
     });
     res.set('Content-Type', 'application/json');
     res.send(descriptor);
