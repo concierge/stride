@@ -2,7 +2,7 @@ var request = require('request');
 var API_BASE_URL = 'https://api.atlassian.com';
 var API_AUDIENCE = "api.atlassian.com";
 
-module.exports = function(app) {
+module.exports = function (app) {
 
   /**
    * Functions to call the Stride Javascript API
@@ -49,6 +49,37 @@ module.exports = function(app) {
           },
           json: {
             body: messageBody
+          }
+        }
+
+        request(options, function (err, response, body) {
+          callback(err, body);
+        });
+      }
+    });
+  }
+
+  function updateGlanceState(cloudId, conversationId, glanceKey, stateTxt, callback) {
+    getAccessToken(function (err, accessToken) {
+      if (err) {
+        callback(err);
+      } else {
+        var uri = API_BASE_URL + '/app/module/chat/conversation/chat:glance/' + glanceKey + '/state';
+        console.log(uri);
+        var options = {
+          uri: uri,
+          method: 'POST',
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "cache-control": "no-cache"
+          },
+          json: {
+            "context": {
+              "cloudId": cloudId,
+              "conversationId": conversationId
+            },
+            "label": stateTxt,
+            "metadata": {}
           }
         }
 
@@ -114,7 +145,7 @@ module.exports = function(app) {
   }
 
   /*
-  * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-post
+   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-post
    */
   function createConversation(token, cloudId, name, privacy, topic, callback) {
     var body = {
@@ -270,6 +301,8 @@ module.exports = function(app) {
     sendTextMessage: sendTextMessage,
 
     sendDocumentReply: sendDocumentReply,
+
+    updateGlanceState: updateGlanceState,
 
     sendTextReply: sendTextReply
   }

@@ -112,7 +112,8 @@
           "url@2x": "/team-icon-21.png"
         },
         "target": "refapp-sidebar",
-        "queryUrl": "/module/glance/state"
+        "queryUrl": "/module/glance/state",
+        "authentication": "jwt"
       }
     ],
     "chat:messageAction" :[

@@ -102,7 +102,6 @@ express.post('/uninstalled',
 
 function validateJWT(req, res, next) {
   try {
-    console.log('validating JWT: ' + JSON.stringify(req.headers));
 
     //Extract the JWT token from the request header
     var encodedJwt = req.query['jwt']
@@ -149,6 +148,7 @@ function validateJWT(req, res, next) {
  */
 
 express.post('/bot-mention',
+
     function (req, res) {
       console.log('bot mention');
 
@@ -160,8 +160,15 @@ express.post('/bot-mention',
           userId: mentionNode.attrs.id,
           userAlias: mentionNode.attrs.text
         });
-
       })
+
+      //Here's how to update the glance state
+      var cloudId = req.body.cloudId;
+      var conversationId = req.body.conversation.id;
+      stride.updateGlanceState(
+          cloudId, conversationId, "refapp-glance", "Click me!!", function(err, response) {
+            console.log("glance state updated: " + err + "," + JSON.stringify(response));
+          })
 
       var reply = sampleMessages.getSampleMessage(mentions);
       stride.sendDocumentReply(req.body, reply, function (err, response) {
@@ -270,10 +277,6 @@ express.get('/module/glance/state',
             }
           }));
     });
-
-function updateGlance() {
-  //todo
-}
 
 /*
  * chat:sidebar
