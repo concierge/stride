@@ -189,12 +189,26 @@ express.get('/module/config',
       res.redirect("/app-module-config.html");
     });
 
-// Get the configuration state from the configuration dialog
+// Get the configuration state: is it configured or not for the conversation?
 express.get('/module/config/state',
     validateJWT,
     function (req, res) {
       var conversationId = res.locals.context.conversationId;
       console.log("getting config state for conversation " + conversationId);
+      var config = configStore[res.locals.context.conversationId];
+      var state = {configured: true};
+      if (!config)
+        state.configured = false;
+      console.log(state);
+      res.send(JSON.stringify(state));
+    });
+
+// Get the configuration content from the configuration dialog
+express.get('/module/config/content',
+    validateJWT,
+    function (req, res) {
+      var conversationId = res.locals.context.conversationId;
+      console.log("getting config content for conversation " + conversationId);
       var config = configStore[res.locals.context.conversationId];
       if (!config)
         config = {
@@ -203,12 +217,12 @@ express.get('/module/config/state',
       res.send(JSON.stringify(config));
     });
 
-// Save the configuration state from the configuration dialog
-express.post('/module/config/state',
+// Save the configuration content from the configuration dialog
+express.post('/module/config/content',
     validateJWT,
     function (req, res) {
       var conversationId = res.locals.context.conversationId;
-      console.log("saving config state for conversation " + conversationId + ": " + JSON.stringify(req.body));
+      console.log("saving config content for conversation " + conversationId + ": " + JSON.stringify(req.body));
       configStore[conversationId] = req.body;
       res.sendStatus(204);
     });

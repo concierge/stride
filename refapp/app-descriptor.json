@@ -129,6 +129,9 @@
         "key": "refapp-config",
         "page": {
           "target": "refapp-dialog-config"
+        },
+        "state": {
+          "url": "/module/config/state"
         }
       }
     ]
