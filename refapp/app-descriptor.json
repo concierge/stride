@@ -63,7 +63,7 @@
         "authentication": "jwt"
       },
       {
-        "key": "refapp-config",
+        "key": "refapp-dialog-config",
         "title": {
           "value": "App Configuration"
         },
@@ -122,6 +122,14 @@
           "value": "Send to Dialog"
         },
         "target": "refapp-dialog"
+      }
+    ],
+    "chat:configuration" : [
+      {
+        "key": "refapp-config",
+        "page": {
+          "target": "refapp-dialog-config"
+        }
       }
     ]
   }
