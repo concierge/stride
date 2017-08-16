@@ -155,6 +155,17 @@ express.post('/bot-mention',
     function (req, res) {
       console.log('bot mention');
 
+      //The message is in req.body.message. It is sent using the Atlassian document format.
+      //A plain text representation is available in req.body.message.text
+      var messageText = req.body.message.text;
+      console.log("Message in plain text: " + messageText);
+
+      //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
+      //NOT WORKING YET
+      stride.convertDocToText(req.body.message.body, function(error, response) {
+        console.log("Message converted to text: " + response)
+      })
+
       // Here's how to extract the list of users who were mentioned in this message
       var mentions = [];
       var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');

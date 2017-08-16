@@ -31,6 +31,7 @@ module.exports = function (app) {
     });
   }
 
+
   /**
    * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-conversationId-message-post
    */
@@ -278,6 +279,39 @@ module.exports = function (app) {
     });
   }
 
+
+  /**
+   * Convert an Atlassian document to plain text
+   * NOT WORKING YET
+   */
+
+  function convertDocToText(document, callback) {
+    getAccessToken(function (err, accessToken) {
+      if (err) {
+        callback(err);
+      } else {
+        var options = {
+          uri: API_BASE_URL + '/pf-editor-service',
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            accept: 'text/plain',
+            authorization: "Bearer " + accessToken
+          },
+          json: document
+        };
+        request(options, function (err, response, body) {
+          if (response.statusCode === 200) {
+            callback(null, body);
+          } else {
+            callback("error converting document: " + JSON.stringify(response));
+          }
+        });
+
+      }
+    });
+  }
+
   return {
 
     getAccessToken: getAccessToken,
@@ -304,6 +338,8 @@ module.exports = function (app) {
 
     updateGlanceState: updateGlanceState,
 
-    sendTextReply: sendTextReply
+    sendTextReply: sendTextReply,
+
+    convertDocToText: convertDocToText
   }
 };
