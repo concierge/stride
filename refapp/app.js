@@ -173,8 +173,8 @@ express.post('/bot-mention',
             console.log("glance state updated: " + err + "," + JSON.stringify(response));
           })
 
-      // Here's how to send a reply with a nicely formatted document, using the document builder library
-      // you can also construct it manually, see sampleMessages.js for an example
+      // Here's how to send a reply with a nicely formatted document, using the document builder library adf-builder
+      // you can construct this JSON document manually instead, see sampleMessages.js for an example
       const doc = new Document();
       doc.paragraph()
           .text('Here is some ')
