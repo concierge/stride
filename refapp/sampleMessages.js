@@ -1,3 +1,5 @@
+
+
 module.exports = function (app) {
 
   function getSampleMessage(mentions) {
@@ -58,8 +60,8 @@ module.exports = function (app) {
                 {
                   "type": "link",
                   "attrs": {
-                    "href": "http://www.google.com",
-                    "title": "Google"
+                    "href": "https://www.atlassian.com",
+                    "title": "Atlassian"
                   }
                 }
               ]

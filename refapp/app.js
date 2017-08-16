@@ -8,7 +8,7 @@ var request = require('request');
 var cors = require('cors');
 var jsonpath = require('jsonpath');
 var express = expressLib();
-var docBuilder = require('adf-builder')
+var { Document } = require('adf-builder');
 express.use(bodyParser.json());
 express.use(bodyParser.urlencoded({extended: true}));
 express.use(expressLib.static('.'));
@@ -173,8 +173,35 @@ express.post('/bot-mention',
             console.log("glance state updated: " + err + "," + JSON.stringify(response));
           })
 
-      var reply = sampleMessages.getSampleMessage(mentions);
+      // Here's how to send a reply with a nicely formatted document, using the document builder library
+      // you can also construct it manually, see sampleMessages.js for an example
+      const doc = new Document();
+      doc.paragraph()
+          .text('Here is some ')
+          .strong('bold test')
+          .text(' and ')
+          .em('text in italics')
+          .text(' as well as ')
+          .link(', a link', 'https://www.atlassian.com')
+          .text(' , an emoji ')
+          .emoji('smile')
+          .text(' and some code: ')
+          .code('var i = 0;')
+          .text('and a bullet list');
+      doc.bulletList()
+          .textItem('Do this first')
+          .textItem('Do this second');
+      doc.applicationCard('And a card')
+          .link('https://example.com/something')
+          .description('With some description, and an attribute')
+          .detail()
+            .title('Type')
+            .text('Task')
+            .icon({url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype', title: 'Task', label: 'Task'})
+      var reply = doc.toJSON();
+
       stride.sendDocumentReply(req.body, reply, function (err, response) {
+        console.log(response);
         if (err) {
           console.log(err);
           res.sendStatus(500);
