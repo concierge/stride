@@ -8,6 +8,7 @@ var request = require('request');
 var cors = require('cors');
 var jsonpath = require('jsonpath');
 var express = expressLib();
+var docBuilder = require('adf-builder')
 express.use(bodyParser.json());
 express.use(bodyParser.urlencoded({extended: true}));
 express.use(expressLib.static('.'));
@@ -103,10 +104,12 @@ express.post('/uninstalled',
 function validateJWT(req, res, next) {
   try {
 
-    //Extract the JWT token from the request header
+    //Extract the JWT token from the request
+    //Either from the "jwt" request parameter
+    //Or from the "authorization" header, as "Bearer xxx"
     var encodedJwt = req.query['jwt']
-        || req.headers['authorization'].substring(4)
-        || req.headers['Authorization'].substring(4);
+        || req.headers['authorization'].substring(7)
+        || req.headers['Authorization'].substring(7);
 
     // Decode the base64-encoded token, which contains the context of the call
     var jwt = jwtUtil.decode(encodedJwt, null, true);
@@ -148,7 +151,7 @@ function validateJWT(req, res, next) {
  */
 
 express.post('/bot-mention',
-
+    validateJWT,
     function (req, res) {
       console.log('bot mention');
 
@@ -176,7 +179,7 @@ express.post('/bot-mention',
           console.log(err);
           res.sendStatus(500);
         } else {
-          res.sendStatus(204);
+          res.sendStatus(200);
         }
       });
     }
@@ -198,6 +201,8 @@ express.get('/module/config',
 
 // Get the configuration state: is it configured or not for the conversation?
 express.get('/module/config/state',
+    // cross domain request
+    cors(),
     validateJWT,
     function (req, res) {
       var conversationId = res.locals.context.conversationId;
@@ -206,6 +211,7 @@ express.get('/module/config/state',
       var state = {configured: true};
       if (!config)
         state.configured = false;
+      console.log("returning config state: " + JSON.stringify(state));
       res.send(JSON.stringify(state));
     });
 
@@ -267,6 +273,7 @@ express.get('/module/dialog',
  **/
 
 express.get('/module/glance/state',
+    // cross domain request
     cors(),
     validateJWT,
     function (req, res) {
