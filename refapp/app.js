@@ -163,6 +163,7 @@ express.post('/bot-mention',
         res.sendStatus(200);
 
 
+        //Now let's do all the things:
         convertMessageToPlainText(function () {
           extractMentionsFromMessage(function () {
             sendMessageWithFormatting(function () {
@@ -177,16 +178,31 @@ express.post('/bot-mention',
       });
 
       function convertMessageToPlainText(next) {
-        //The message is in req.body.message. It is sent using the Atlassian document format.
-        //A plain text representation is available in req.body.message.text
-        var messageText = req.body.message.text;
-        console.log("Message in plain text: " + messageText);
+        stride.sendTextReply(req.body, "Converting the message you just sent to plain text...", function (err, response) {
 
-        //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
-        stride.convertDocToText(req.body.message.body, function (error, response) {
-          console.log("Message converted to text: " + response)
-          next();
-        })
+          //The message is in req.body.message. It is sent using the Atlassian document format.
+          //A plain text representation is available in req.body.message.text
+          var messageText = req.body.message.text;
+          console.log("Message in plain text: " + messageText);
+
+          //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
+          stride.convertDocToText(req.body.message.body, function (error, response) {
+            console.log("Message converted to text: " + response)
+
+            const doc = new Document();
+            doc.paragraph()
+                .text("In plain text, it looks like this:");
+            doc.blockQuote()
+                .paragraph()
+                .text('"' + response + '"');
+            var reply = doc.toJSON();
+
+            stride.sendDocumentReply(req.body, reply, function (err, response) {
+              console.log(response);
+              next();
+            });
+          })
+        });
       }
 
       function extractMentionsFromMessage(next) {
@@ -213,15 +229,26 @@ express.post('/bot-mention',
               .em('text in italics')
               .text(' as well as ')
               .link(' a link', 'https://www.atlassian.com')
-              .text(' , an emoji ')
-              .emoji('smile')
+              .text(' , emojis ')
+              .emoji(':smile:')
+              .emoji(':rofl:')
+              .emoji(':nerd:')
               .text(' and some code: ')
               .code('var i = 0;')
-              .text('and a bullet list');
+              .text(' and a bullet list');
           doc.bulletList()
               .textItem('With one bullet point')
               .textItem('And another');
-          const card = doc.applicationCard('And a card')
+          doc.panel("info")
+              .paragraph()
+              .text("and an info panel with some text, with some more code below");
+          doc.codeBlock("javascript")
+              .text('var i = 0;\nwhile(true) {\n  i++;\n}');
+
+          doc
+              .paragraph()
+              .text("And a card");
+          const card = doc.applicationCard('With a title')
               .link('https://www.atlassian.com')
               .description('With some description, and a couple of attributes');
           card.detail()
@@ -293,9 +320,12 @@ express.post('/bot-mention',
       }
 
       function done() {
-        stride.sendTextReply(req.body, "OK, I'm done. Thanks for watching!");
+        stride.sendTextReply(req.body, "OK, I'm done. Thanks for watching!", function(){
+          console.log("done.");
+        });
       }
-    });
+    }
+);
 
 
 /**
