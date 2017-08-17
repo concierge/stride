@@ -154,94 +154,148 @@ express.post('/bot-mention',
     validateJWT,
     function (req, res) {
       console.log('bot mention');
-
-      //The message is in req.body.message. It is sent using the Atlassian document format.
-      //A plain text representation is available in req.body.message.text
-      var messageText = req.body.message.text;
-      console.log("Message in plain text: " + messageText);
-
-      //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
-      stride.convertDocToText(req.body.message.body, function(error, response) {
-        console.log("Message converted to text: " + response)
-      })
-
-      // Here's how to extract the list of users who were mentioned in this message
-      var mentions = [];
-      var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
-      mentionNodes.forEach(function (mentionNode) {
-        mentions.push({
-          userId: mentionNode.attrs.id,
-          userAlias: mentionNode.attrs.text
-        });
-      })
-
-      // To send a file or an image in a message, you first need to upload it
-      var options = {
-        uri: 'https://media.giphy.com/media/L12g7V0J62bf2/giphy.gif',
-        method: 'GET'
-      }
-      request(options, function (err, response, body) {
-        console.log("posting an image");
-        stride.sendMedia(cloudId, conversationId, "An image", body, function(err, response) {
-          console.log(err);
-          console.log(response.statusCode);
-        });
-      });
-
-
-      // Here's how to send a reply with a nicely formatted document, using the document builder library adf-builder
-      // you can construct this JSON document manually instead, see sampleMessages.js for an example
-      const doc = new Document();
-      doc.paragraph()
-          .text('Here is some ')
-          .strong('bold test')
-          .text(' and ')
-          .em('text in italics')
-          .text(' as well as ')
-          .link(' a link', 'https://www.atlassian.com')
-          .text(' , an emoji ')
-          .emoji('smile')
-          .text(' and some code: ')
-          .code('var i = 0;')
-          .text('and a bullet list');
-      doc.bulletList()
-          .textItem('With one bullet point')
-          .textItem('And another');
-      const card = doc.applicationCard('And a card')
-          .link('https://www.atlassian.com')
-          .description('With some description, and a couple of attributes');
-      card.detail()
-            .title('Type')
-            .text('Task')
-            .icon({url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype', title: 'Task', label: 'Task'})
-      card.detail()
-          .title('User')
-          .text('Joe Blog')
-          .icon({url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype', title: 'Task', label: 'Task'})
-      var reply = doc.toJSON();
-
-      //Here's how to update the glance state
       var cloudId = req.body.cloudId;
       var conversationId = req.body.conversation.id;
-      stride.updateGlanceState(
-          cloudId, conversationId, "refapp-glance", "Click me!!", function(err, response) {
-            console.log("glance state updated: " + err + "," + JSON.stringify(response));
-          });
 
-      //Here's how to send a reply
-      stride.sendDocumentReply(req.body, reply, function (err, response) {
-        console.log(response);
-        if (err) {
-          console.log(err);
-          res.sendStatus(500);
-        } else {
-          res.sendStatus(200);
-        }
+      stride.sendTextReply(req.body, "OK, I'm on it!", function (err, response) {
+
+        //If you don't send a 200, Stride will try to resend it
+        res.sendStatus(200);
+
+
+        convertMessageToPlainText(function () {
+          extractMentionsFromMessage(function () {
+            sendMessageWithFormatting(function () {
+              sendMessageWithImage(function () {
+                updateGlance(function () {
+                  done()
+                });
+              })
+            })
+          })
+        })
       });
 
+      function convertMessageToPlainText(next) {
+        //The message is in req.body.message. It is sent using the Atlassian document format.
+        //A plain text representation is available in req.body.message.text
+        var messageText = req.body.message.text;
+        console.log("Message in plain text: " + messageText);
 
-    }
-);
+        //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
+        stride.convertDocToText(req.body.message.body, function (error, response) {
+          console.log("Message converted to text: " + response)
+          next();
+        })
+      }
+
+      function extractMentionsFromMessage(next) {
+        // Here's how to extract the list of users who were mentioned in this message
+        var reply = "Users who were mentioned in that message: ";
+        var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
+        mentionNodes.forEach(function (mentionNode) {
+          reply += mentionNode.attrs.text + ' (ID: ' + mentionNode.attrs.id + ') ';
+        });
+        stride.sendTextReply(req.body, reply, function (err, response) {
+          next();
+        });
+      }
+
+      function sendMessageWithFormatting(next) {
+        stride.sendTextReply(req.body, "Sending a message with plenty of formatting...", function (err, response) {
+          // Here's how to send a reply with a nicely formatted document, using the document builder library adf-builder
+          // you can construct this JSON document manually instead, see sampleMessages.js for an example
+          const doc = new Document();
+          doc.paragraph()
+              .text('Here is some ')
+              .strong('bold test')
+              .text(' and ')
+              .em('text in italics')
+              .text(' as well as ')
+              .link(' a link', 'https://www.atlassian.com')
+              .text(' , an emoji ')
+              .emoji('smile')
+              .text(' and some code: ')
+              .code('var i = 0;')
+              .text('and a bullet list');
+          doc.bulletList()
+              .textItem('With one bullet point')
+              .textItem('And another');
+          const card = doc.applicationCard('And a card')
+              .link('https://www.atlassian.com')
+              .description('With some description, and a couple of attributes');
+          card.detail()
+              .title('Type')
+              .text('Task')
+              .icon({
+                url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
+                title: 'Task',
+                label: 'Task'
+              })
+          card.detail()
+              .title('User')
+              .text('Joe Blog')
+              .icon({
+                url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
+                title: 'Task',
+                label: 'Task'
+              })
+          var reply = doc.toJSON();
+
+          stride.sendDocumentReply(req.body, reply, function (err, response) {
+            console.log(response);
+            next();
+          });
+        });
+      }
+
+      function sendMessageWithImage(next) {
+        stride.sendTextReply(req.body, "Uploading an image and sending it in a message...", function (err, response) {
+
+
+          // To send a file or an image in a message, you first need to upload it
+          var https = require('https');
+          var imgUrl = 'https://media.giphy.com/media/L12g7V0J62bf2/giphy.gif';
+          https.get(imgUrl, function (downloadStream) {
+            stride.sendMedia(cloudId, conversationId, "an_image2.jpg", downloadStream, function (err, response) {
+
+              //Once uploaded, you can include it in a message
+              var mediaId = JSON.parse(response).data.id;
+              const doc = new Document();
+              doc.paragraph()
+                  .text("and here's that image");
+              doc
+                  .mediaGroup()
+                  .media({type: 'file', id: mediaId, collection: conversationId});
+
+              var reply = doc.toJSON();
+              stride.sendDocumentReply(req.body, reply, function (err, response) {
+                console.log(response);
+                next()
+              });
+            });
+          });
+        });
+      }
+
+      function updateGlance(next) {
+        stride.sendTextReply(req.body, "Updating the glance state...", function (err, response) {
+          //Here's how to update the glance state
+
+          stride.updateGlanceState(
+              cloudId, conversationId, "refapp-glance", "Click me!!", function (err, response) {
+                console.log("glance state updated: " + err + "," + JSON.stringify(response));
+                stride.sendTextReply(req.body, "It should be updated -->", function (err, response) {
+                  next();
+                });
+              });
+        });
+      }
+
+      function done() {
+        stride.sendTextReply(req.body, "OK, I'm done. Thanks for watching!");
+      }
+    });
 
 
 /**

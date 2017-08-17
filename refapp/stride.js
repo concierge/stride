@@ -1,19 +1,17 @@
 var request = require('request');
 var API_BASE_URL = 'https://api.atlassian.com';
 var API_AUDIENCE = "api.atlassian.com";
+var AUTH_API_BASE_URL='https://auth.atlassian.com'
 
 module.exports = function (app) {
 
-  /**
-   * Functions to call the Stride Javascript API
-   */
 
   /**
    * Get an access token from the Atlassian Identity API
    */
   function getAccessToken(callback) {
     var options = {
-      uri: 'https://auth.atlassian.com/oauth/token',
+      uri: AUTH_API_BASE_URL + '/oauth/token',
       method: 'POST',
       json: {
         grant_type: "client_credentials",
@@ -31,6 +29,9 @@ module.exports = function (app) {
     });
   }
 
+  /**
+   * Functions to call the Stride API
+   */
 
   /**
    * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-conversationId-message-post
@@ -192,7 +193,7 @@ module.exports = function (app) {
   /**
    * DOES NOT WORK YET
    */
-  function sendMedia(cloudId, conversationId, name, media, callback) {
+  function sendMedia(cloudId, conversationId, name, stream, callback) {
     getAccessToken(function (err, accessToken) {
       if (err) {
         callback(err);
@@ -204,7 +205,7 @@ module.exports = function (app) {
             authorization: "Bearer " + accessToken,
             'content-type': 'application/octet-stream'
           },
-          body: media
+          body: stream
         }
         request(options, function (err, response, body) {
           console.log(response.statusCode)
