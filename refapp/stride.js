@@ -60,37 +60,6 @@ module.exports = function (app) {
     });
   }
 
-  function updateGlanceState(cloudId, conversationId, glanceKey, stateTxt, callback) {
-    getAccessToken(function (err, accessToken) {
-      if (err) {
-        callback(err);
-      } else {
-        var uri = API_BASE_URL + '/app/module/chat/conversation/chat:glance/' + glanceKey + '/state';
-        console.log(uri);
-        var options = {
-          uri: uri,
-          method: 'POST',
-          headers: {
-            authorization: "Bearer " + accessToken,
-            "cache-control": "no-cache"
-          },
-          json: {
-            "context": {
-              "cloudId": cloudId,
-              "conversationId": conversationId
-            },
-            "label": stateTxt,
-            "metadata": {}
-          }
-        }
-
-        request(options, function (err, response, body) {
-          callback(err, body);
-        });
-      }
-    });
-  }
-
   /**
    * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-user-userId-message-post
    */
@@ -221,6 +190,62 @@ module.exports = function (app) {
   }
 
   /**
+   * DOES NOT WORK YET
+   */
+  function sendMedia(cloudId, conversationId, name, media, callback) {
+    getAccessToken(function (err, accessToken) {
+      if (err) {
+        callback(err);
+      } else {
+        var options = {
+          uri: API_BASE_URL + '/site/' + cloudId + '/conversation/' + conversationId + '/media?name=' + name,
+          method: 'POST',
+          headers: {
+            authorization: "Bearer " + accessToken,
+            'content-type': 'application/octet-stream'
+          },
+          body: media
+        }
+        request(options, function (err, response, body) {
+          console.log(response.statusCode)
+          callback(err, body);
+        });
+      }
+    });
+  }
+
+  function updateGlanceState(cloudId, conversationId, glanceKey, stateTxt, callback) {
+    getAccessToken(function (err, accessToken) {
+      if (err) {
+        callback(err);
+      } else {
+        var uri = API_BASE_URL + '/app/module/chat/conversation/chat:glance/' + glanceKey + '/state';
+        console.log(uri);
+        var options = {
+          uri: uri,
+          method: 'POST',
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "cache-control": "no-cache"
+          },
+          json: {
+            "context": {
+              "cloudId": cloudId,
+              "conversationId": conversationId
+            },
+            "label": stateTxt,
+            "metadata": {}
+          }
+        }
+
+        request(options, function (err, response, body) {
+          callback(err, body);
+        });
+      }
+    });
+  }
+
+  /**
    * Utility functions
    */
 
@@ -291,7 +316,7 @@ module.exports = function (app) {
         callback(err);
       } else {
         var options = {
-          uri: API_BASE_URL + '/pf-editor-service',
+          uri: API_BASE_URL + '/pf-editor-service/render',
           method: 'POST',
           headers: {
             'content-type': 'application/json',
@@ -340,6 +365,8 @@ module.exports = function (app) {
 
     sendTextReply: sendTextReply,
 
-    convertDocToText: convertDocToText
+    convertDocToText: convertDocToText,
+
+    sendMedia: sendMedia
   }
 };

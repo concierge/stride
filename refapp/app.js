@@ -161,7 +161,6 @@ express.post('/bot-mention',
       console.log("Message in plain text: " + messageText);
 
       //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
-      //NOT WORKING YET
       stride.convertDocToText(req.body.message.body, function(error, response) {
         console.log("Message converted to text: " + response)
       })
@@ -176,13 +175,19 @@ express.post('/bot-mention',
         });
       })
 
-      //Here's how to update the glance state
-      var cloudId = req.body.cloudId;
-      var conversationId = req.body.conversation.id;
-      stride.updateGlanceState(
-          cloudId, conversationId, "refapp-glance", "Click me!!", function(err, response) {
-            console.log("glance state updated: " + err + "," + JSON.stringify(response));
-          })
+      // To send a file or an image in a message, you first need to upload it
+      var options = {
+        uri: 'https://media.giphy.com/media/L12g7V0J62bf2/giphy.gif',
+        method: 'GET'
+      }
+      request(options, function (err, response, body) {
+        console.log("posting an image");
+        stride.sendMedia(cloudId, conversationId, "An image", body, function(err, response) {
+          console.log(err);
+          console.log(response.statusCode);
+        });
+      });
+
 
       // Here's how to send a reply with a nicely formatted document, using the document builder library adf-builder
       // you can construct this JSON document manually instead, see sampleMessages.js for an example
@@ -193,24 +198,37 @@ express.post('/bot-mention',
           .text(' and ')
           .em('text in italics')
           .text(' as well as ')
-          .link(', a link', 'https://www.atlassian.com')
+          .link(' a link', 'https://www.atlassian.com')
           .text(' , an emoji ')
           .emoji('smile')
           .text(' and some code: ')
           .code('var i = 0;')
           .text('and a bullet list');
       doc.bulletList()
-          .textItem('Do this first')
-          .textItem('Do this second');
-      doc.applicationCard('And a card')
-          .link('https://example.com/something')
-          .description('With some description, and an attribute')
-          .detail()
+          .textItem('With one bullet point')
+          .textItem('And another');
+      const card = doc.applicationCard('And a card')
+          .link('https://www.atlassian.com')
+          .description('With some description, and a couple of attributes');
+      card.detail()
             .title('Type')
             .text('Task')
             .icon({url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype', title: 'Task', label: 'Task'})
+      card.detail()
+          .title('User')
+          .text('Joe Blog')
+          .icon({url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype', title: 'Task', label: 'Task'})
       var reply = doc.toJSON();
 
+      //Here's how to update the glance state
+      var cloudId = req.body.cloudId;
+      var conversationId = req.body.conversation.id;
+      stride.updateGlanceState(
+          cloudId, conversationId, "refapp-glance", "Click me!!", function(err, response) {
+            console.log("glance state updated: " + err + "," + JSON.stringify(response));
+          });
+
+      //Here's how to send a reply
       stride.sendDocumentReply(req.body, reply, function (err, response) {
         console.log(response);
         if (err) {
@@ -220,6 +238,8 @@ express.post('/bot-mention',
           res.sendStatus(200);
         }
       });
+
+
     }
 );
 
