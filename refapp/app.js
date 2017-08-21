@@ -17,6 +17,7 @@ var PORT = process.env.PORT;
 var app = {};
 app.clientId = process.env.CLIENT_ID;
 app.clientSecret = process.env.CLIENT_SECRET;
+app.environment = process.env.ENV ? process.env.ENV : "production";
 
 if (!PORT || !app.clientId || !app.clientSecret) {
   console.log ("Usage:");
@@ -64,13 +65,14 @@ express.post('/installed',
           installedBy: userId
         }
       }
+      res.sendStatus(200);
 
       //Send a message to the conversation to announce the app is ready
       stride.sendTextMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function (err, response) {
         if (err)
           console.log(err);
       });
-      res.sendStatus(204);
+
     }
 );
 
@@ -178,6 +180,7 @@ express.post('/bot-mention',
       });
 
       function convertMessageToPlainText(next) {
+
         stride.sendTextReply(req.body, "Converting the message you just sent to plain text...", function (err, response) {
 
           //The message is in req.body.message. It is sent using the Atlassian document format.
@@ -286,20 +289,22 @@ express.post('/bot-mention',
           https.get(imgUrl, function (downloadStream) {
             stride.sendMedia(cloudId, conversationId, "an_image2.jpg", downloadStream, function (err, response) {
 
-              //Once uploaded, you can include it in a message
-              var mediaId = JSON.parse(response).data.id;
-              const doc = new Document();
-              doc.paragraph()
-                  .text("and here's that image");
-              doc
-                  .mediaGroup()
-                  .media({type: 'file', id: mediaId, collection: conversationId});
+              if(!err) {
+                //Once uploaded, you can include it in a message
+                var mediaId = JSON.parse(response).data.id;
+                const doc = new Document();
+                doc.paragraph()
+                    .text("and here's that image");
+                doc
+                    .mediaGroup()
+                    .media({type: 'file', id: mediaId, collection: conversationId});
 
-              var reply = doc.toJSON();
-              stride.sendDocumentReply(req.body, reply, function (err, response) {
-                console.log(response);
-                next()
-              });
+                var reply = doc.toJSON();
+                stride.sendDocumentReply(req.body, reply, function (err, response) {
+                  console.log(response);
+                  next();
+                });
+              }
             });
           });
         });
@@ -316,6 +321,7 @@ express.post('/bot-mention',
                   next();
                 });
               });
+
         });
       }
 
@@ -375,9 +381,14 @@ express.get('/module/config/content',
 express.post('/module/config/content',
     validateJWT,
     function (req, res) {
+      var cloudId = res.locals.context.cloudId;
       var conversationId = res.locals.context.conversationId;
       console.log("saving config content for conversation " + conversationId + ": " + JSON.stringify(req.body));
       configStore[conversationId] = req.body;
+
+      stride.updateConfigurationState(cloudId, conversationId, 'refapp-config', true, function(err, body) {
+      })
+
       res.sendStatus(204);
     });
 

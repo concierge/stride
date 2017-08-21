@@ -1,10 +1,10 @@
 var request = require('request');
-var API_BASE_URL = 'https://api.atlassian.com';
-var API_AUDIENCE = "api.atlassian.com";
-var AUTH_API_BASE_URL='https://auth.atlassian.com'
+
 
 module.exports = function (app) {
-
+  var API_BASE_URL = app.environment == "production" ? 'https://api.atlassian.com' : 'https://api.stg.atlassian.com';
+  var API_AUDIENCE = app.environment == "production" ? "api.atlassian.com" : "api.stg.atlassian.com"
+  var AUTH_API_BASE_URL = app.environment == "production" ? 'https://auth.atlassian.com' : 'https://atlassian-account-stg.pus2.auth0.com';
 
   /**
    * Get an access token from the Atlassian Identity API
@@ -246,6 +246,36 @@ module.exports = function (app) {
     });
   }
 
+  function updateConfigurationState(cloudId, conversationId, configKey, state, callback) {
+    getAccessToken(function (err, accessToken) {
+      if (err) {
+        callback(err);
+      } else {
+        var uri = API_BASE_URL + '/app/module/chat/conversation/chat:configuration/' + configKey + '/state';
+        console.log(uri);
+        var options = {
+          uri: uri,
+          method: 'POST',
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "cache-control": "no-cache"
+          },
+          json: {
+            "context": {
+              "cloudId": cloudId,
+              "conversationId": conversationId
+            },
+            "configured": state
+          }
+        }
+
+        request(options, function (err, response, body) {
+          callback(err, body);
+        });
+      }
+    });
+  }
+
   /**
    * Utility functions
    */
@@ -363,6 +393,8 @@ module.exports = function (app) {
     sendDocumentReply: sendDocumentReply,
 
     updateGlanceState: updateGlanceState,
+
+    updateConfigurationState: updateConfigurationState,
 
     sendTextReply: sendTextReply,
 
