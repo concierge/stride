@@ -45,7 +45,7 @@
               {
                 type: 'POST',
                 url: '/ui/ping',
-                headers: {'Authorization': 'JWT ' + token},
+                headers: {'Authorization': 'Bearer ' + token},
                 dataType: 'json',
                 success: function (data) {
                   $("#info").text('Response from the app backend: ' + data.status);

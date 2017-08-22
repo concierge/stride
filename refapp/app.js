@@ -253,7 +253,8 @@ express.post('/bot-mention',
               .text("And a card");
           const card = doc.applicationCard('With a title')
               .link('https://www.atlassian.com')
-              .description('With some description, and a couple of attributes');
+              .description('With some description, and a couple of attributes')
+              .background('https://www.atlassian.com');
           card.detail()
               .title('Type')
               .text('Task')
