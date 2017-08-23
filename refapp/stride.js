@@ -191,7 +191,7 @@ module.exports = function (app) {
   }
 
   /**
-   * DOES NOT WORK YET
+   * Send a file to a conversation. you can then include this file when sending a message
    */
   function sendMedia(cloudId, conversationId, name, stream, callback) {
     getAccessToken(function (err, accessToken) {
@@ -338,7 +338,6 @@ module.exports = function (app) {
 
   /**
    * Convert an Atlassian document to plain text
-   * NOT WORKING YET
    */
 
   function convertDocToText(document, callback) {
