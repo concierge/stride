@@ -388,9 +388,8 @@ express.post('/module/config/content',
       configStore[conversationId] = req.body;
 
       stride.updateConfigurationState(cloudId, conversationId, 'refapp-config', true, function(err, body) {
+        res.sendStatus(204);
       })
-
-      res.sendStatus(204);
     });
 
 

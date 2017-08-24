@@ -21,7 +21,7 @@ module.exports = function (app) {
       }
     };
     request(options, function (err, response, body) {
-      if (response.statusCode === 200 && body.access_token) {
+      if (response && response.statusCode === 200 && body.access_token) {
         callback(null, body.access_token);
       } else {
         callback("could not generate access token: " + JSON.stringify(response));
@@ -208,7 +208,6 @@ module.exports = function (app) {
           body: stream
         }
         request(options, function (err, response, body) {
-          console.log(response.statusCode)
           callback(err, body);
         });
       }
@@ -356,7 +355,7 @@ module.exports = function (app) {
           json: document
         };
         request(options, function (err, response, body) {
-          if (response.statusCode === 200) {
+          if (response && response.statusCode === 200) {
             callback(null, body);
           } else {
             callback("error converting document: " + JSON.stringify(response));
