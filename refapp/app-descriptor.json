@@ -108,8 +108,8 @@
           "value": "App Glance"
         },
         "icon": {
-          "url": "/team-icon-21.png",
-          "url@2x": "/team-icon-21.png"
+          "url": "/img/logo.png",
+          "url@2x": "/img/logo.png"
         },
         "target": "refapp-sidebar",
         "queryUrl": "/module/glance/state",
@@ -136,6 +136,19 @@
         },
         "authentication": "jwt"
       }
+    ],
+    "core:webhook": [
+      {
+      "key": "refapp-webhook-conversation",
+      "event": "avi:chat:conversation:mutation",
+      "url": "/conversation-updated"
+      },
+      {
+        "key": "refapp-webhook-roster",
+        "event": "avi:chat:roster:updates",
+        "url": "/roster-updated"
+      }
+
     ]
   }
 }

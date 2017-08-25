@@ -208,6 +208,7 @@ module.exports = function (app) {
           body: stream
         }
         request(options, function (err, response, body) {
+          console.log("upload file: " + response.statusCode)
           callback(err, body);
         });
       }
@@ -269,6 +270,8 @@ module.exports = function (app) {
         }
 
         request(options, function (err, response, body) {
+          console.log(response.statusCode);
+          console.log(response.body);
           callback(err, body);
         });
       }

@@ -290,7 +290,8 @@ express.post('/bot-mention',
           https.get(imgUrl, function (downloadStream) {
             stride.sendMedia(cloudId, conversationId, "an_image2.jpg", downloadStream, function (err, response) {
 
-              if(!err) {
+              if(response && JSON.parse(response).data) {
+
                 //Once uploaded, you can include it in a message
                 var mediaId = JSON.parse(response).data.id;
                 const doc = new Document();
@@ -334,6 +335,27 @@ express.post('/bot-mention',
     }
 );
 
+
+/**
+ * core:webhook
+ *
+ * Your app can listen to specific events, like users joining/leaving conversations, or conversations being created/updated
+ * Note: webhooks will only fire for conversations your app is authorized to access
+ */
+
+express.post('/conversation-updated',
+  validateJWT,
+  function(req, res) {
+    console.log('A conversation was changed: ' + req.body.conversation.id + ', change: ' + req.body.action);
+    res.sendStatus(200);
+  });
+
+express.post('/roster-updated',
+    validateJWT,
+    function(req, res) {
+      console.log('A user joined or left a conversation: ' + req.body.conversation.id + ', change: ' + req.body.action);
+      res.sendStatus(200);
+    });
 
 /**
  * chat:configuration
