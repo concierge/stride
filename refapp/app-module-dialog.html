@@ -34,7 +34,31 @@
            * Append a message to the chat input box
            */
           if (event.action === "action-appendMessage") {
-            AP.chat.appendMessage($("#message").val());
+            AP.chat.setMessageBody({
+                  "version": 1,
+                  "type": "doc",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Just appended "
+                        },
+                        {
+                          "type": "text",
+                          "text": $("#message").val(),
+                          "marks": [
+                            {
+                              "type": "strong"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+            );
             closeDialog(false);
           }
 
