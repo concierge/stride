@@ -158,6 +158,7 @@ express.post('/bot-mention',
       console.log('bot mention');
       var cloudId = req.body.cloudId;
       var conversationId = req.body.conversation.id;
+      var senderId = req.body.message.sender.id;
 
       stride.sendTextReply(req.body, "OK, I'm on it!", function (err, response) {
 
@@ -168,11 +169,13 @@ express.post('/bot-mention',
         //Now let's do all the things:
         convertMessageToPlainText(function () {
           extractMentionsFromMessage(function () {
-            sendMessageWithFormatting(function () {
-              sendMessageWithImage(function () {
-                updateGlance(function () {
-                  done()
-                });
+            getUserDetails(function () {
+              sendMessageWithFormatting(function () {
+                sendMessageWithImage(function () {
+                  updateGlance(function () {
+                    done()
+                  });
+                })
               })
             })
           })
@@ -260,7 +263,6 @@ express.post('/bot-mention',
               .text('Task')
               .icon({
                 url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
-                title: 'Task',
                 label: 'Task'
               })
           card.detail()
@@ -268,7 +270,6 @@ express.post('/bot-mention',
               .text('Joe Blog')
               .icon({
                 url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
-                title: 'Task',
                 label: 'Task'
               })
           var reply = doc.toJSON();
@@ -290,7 +291,7 @@ express.post('/bot-mention',
           https.get(imgUrl, function (downloadStream) {
             stride.sendMedia(cloudId, conversationId, "an_image2.jpg", downloadStream, function (err, response) {
 
-              if(response && JSON.parse(response).data) {
+              if (response && JSON.parse(response).data) {
 
                 //Once uploaded, you can include it in a message
                 var mediaId = JSON.parse(response).data.id;
@@ -312,6 +313,16 @@ express.post('/bot-mention',
         });
       }
 
+      function getUserDetails(next) {
+        stride.sendTextReply(req.body, "Getting user details for the sender of the message", function (err, response) {
+          stride.getUser(cloudId, senderId, function (err, body) {
+            stride.sendTextReply(req.body, "This message was sent by " + body.displayName, function (err, response) {
+              next();
+            });
+          });
+        });
+      }
+
       function updateGlance(next) {
         stride.sendTextReply(req.body, "Updating the glance state...", function (err, response) {
           //Here's how to update the glance state
@@ -328,7 +339,7 @@ express.post('/bot-mention',
       }
 
       function done() {
-        stride.sendTextReply(req.body, "OK, I'm done. Thanks for watching!", function(){
+        stride.sendTextReply(req.body, "OK, I'm done. Thanks for watching!", function () {
           console.log("done.");
         });
       }
@@ -344,15 +355,15 @@ express.post('/bot-mention',
  */
 
 express.post('/conversation-updated',
-  validateJWT,
-  function(req, res) {
-    console.log('A conversation was changed: ' + req.body.conversation.id + ', change: ' + req.body.action);
-    res.sendStatus(200);
-  });
+    validateJWT,
+    function (req, res) {
+      console.log('A conversation was changed: ' + req.body.conversation.id + ', change: ' + req.body.action);
+      res.sendStatus(200);
+    });
 
 express.post('/roster-updated',
     validateJWT,
-    function(req, res) {
+    function (req, res) {
       console.log('A user joined or left a conversation: ' + req.body.conversation.id + ', change: ' + req.body.action);
       res.sendStatus(200);
     });
@@ -409,7 +420,7 @@ express.post('/module/config/content',
       console.log("saving config content for conversation " + conversationId + ": " + JSON.stringify(req.body));
       configStore[conversationId] = req.body;
 
-      stride.updateConfigurationState(cloudId, conversationId, 'refapp-config', true, function(err, body) {
+      stride.updateConfigurationState(cloudId, conversationId, 'refapp-config', true, function (err, body) {
         res.sendStatus(204);
       })
     });

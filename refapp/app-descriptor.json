@@ -136,19 +136,6 @@
         },
         "authentication": "jwt"
       }
-    ],
-    "core:webhook": [
-      {
-      "key": "refapp-webhook-conversation",
-      "event": "avi:chat:conversation:mutation",
-      "url": "/conversation-updated"
-      },
-      {
-        "key": "refapp-webhook-roster",
-        "event": "avi:chat:roster:updates",
-        "url": "/roster-updated"
-      }
-
     ]
   }
 }

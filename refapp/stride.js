@@ -98,23 +98,6 @@ module.exports = function (app) {
     });
   }
 
-  /**
-   * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-Users-userId-get
-   */
-  function getUser(token, cloudId, userId, callback) {
-    var options = {
-      uri: API_BASE_URL + '/site/' + cloudId + '/user/' + userId,
-      method: 'GET',
-      headers: {
-        authorization: "Bearer " + token,
-        "cache-control": "no-cache"
-      }
-    }
-    request(options, function (err, response, body) {
-      callback(err, JSON.parse(body));
-    });
-  }
-
   /*
    * https://developer.atlassian.com/cloud/stride/apis/rest/#api-site-cloudId-conversation-post
    */
@@ -273,6 +256,30 @@ module.exports = function (app) {
           console.log(response.statusCode);
           console.log(response.body);
           callback(err, body);
+        });
+      }
+    });
+  }
+
+  /**
+   * Atlassian Users API
+   */
+
+  function getUser(cloudId, userId, callback) {
+    getAccessToken(function (err, accessToken) {
+      if (err) {
+        callback(err);
+      } else {
+        var options = {
+          uri: API_BASE_URL + '/scim/site/' + cloudId + '/Users/' + userId,
+          method: 'GET',
+          headers: {
+            authorization: "Bearer " + accessToken,
+            "cache-control": "no-cache"
+          }
+        }
+        request(options, function (err, response, body) {
+          callback(err, JSON.parse(body));
         });
       }
     });
