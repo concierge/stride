@@ -198,8 +198,7 @@ express.post('/bot-mention',
             const doc = new Document();
             doc.paragraph()
                 .text("In plain text, it looks like this:");
-            doc.blockQuote()
-                .paragraph()
+            doc.paragraph()
                 .text('"' + response + '"');
             var reply = doc.toJSON();
 
