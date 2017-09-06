@@ -1,6 +1,6 @@
 {
   "name": "banana-api-tutorial-simpleBot",
-  "repository": "bitbucket:hipchat/banana-api-tutorial",
+  "repository": "bitbucket:atlassian/stride-api-tutorial",
   "description": "a sample app",
   "dependencies": {
     "body-parser": "^1.15.2",
