@@ -1,5 +1,5 @@
 var request = require('request');
-
+var jwtUtil = require('jwt-simple');
 
 module.exports = function (app) {
   var API_BASE_URL = app.environment == "production" ? 'https://api.atlassian.com' : 'https://api.stg.atlassian.com';
@@ -22,6 +22,7 @@ module.exports = function (app) {
     };
     request(options, function (err, response, body) {
       if (response && response.statusCode === 200 && body.access_token) {
+        var jwt = jwtUtil.decode(body.access_token, null, true);
         callback(null, body.access_token);
       } else {
         callback("could not generate access token: " + JSON.stringify(response));
