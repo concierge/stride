@@ -119,8 +119,8 @@ function validateJWT(req, res, next) {
     var cloudId = jwt.context.cloudId;
     var userId = jwt.sub;
 
-    // Validate the token signature using the installation's OAuth secret sent by HipChat during add-on installation
-    // (to ensure the call comes from this HipChat installation)
+    // Validate the token signature using the app's OAuth secret (created in DAC App Management)
+    // (to ensure the call comes from Stride)
     jwtUtil.decode(encodedJwt, app.clientSecret);
 
     //all good, it's from Stride, add the context to a local variable
