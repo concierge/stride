@@ -6,28 +6,37 @@ module.exports = function (app) {
   var API_AUDIENCE = app.environment == "production" ? "api.atlassian.com" : "api.stg.atlassian.com"
   var AUTH_API_BASE_URL = app.environment == "production" ? 'https://auth.atlassian.com' : 'https://atlassian-account-stg.pus2.auth0.com';
 
+  var token = null;
   /**
    * Get an access token from the Atlassian Identity API
    */
   function getAccessToken(callback) {
-    var options = {
-      uri: AUTH_API_BASE_URL + '/oauth/token',
-      method: 'POST',
-      json: {
-        grant_type: "client_credentials",
-        client_id: app.clientId,
-        client_secret: app.clientSecret,
-        "audience": API_AUDIENCE
-      }
-    };
-    request(options, function (err, response, body) {
-      if (response && response.statusCode === 200 && body.access_token) {
-        var jwt = jwtUtil.decode(body.access_token, null, true);
-        callback(null, body.access_token);
-      } else {
-        callback("could not generate access token: " + JSON.stringify(response));
-      }
-    });
+    if(!token || Date.now() > token.refresh_time) {
+      //No token yet, or token about to expire
+      //Generate a new token
+      var options = {
+        uri: AUTH_API_BASE_URL + '/oauth/token',
+        method: 'POST',
+        json: {
+          grant_type: "client_credentials",
+          client_id: app.clientId,
+          client_secret: app.clientSecret,
+          "audience": API_AUDIENCE
+        }
+      };
+      request(options, function (err, response, body) {
+        if (response && response.statusCode === 200 && body.access_token) {
+          token = body;
+          token.refresh_time = Date.now() + (token.expires_in - 10) * 1000;
+          callback(null, body.access_token);
+        } else {
+          callback("could not generate access token: " + JSON.stringify(response));
+        }
+      });
+    } else {
+      //Reuse the cached token
+      callback(null, token.access_token);
+    }
   }
 
   /**
