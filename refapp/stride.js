@@ -27,7 +27,8 @@ module.exports = function (app) {
       request(options, function (err, response, body) {
         if (response && response.statusCode === 200 && body.access_token) {
           token = body;
-          token.refresh_time = Date.now() + (token.expires_in - 10) * 1000;
+          //refresh the token a minute before it expires (tokens last for an hour)
+          token.refresh_time = Date.now() + (token.expires_in - 60) * 1000;
           callback(null, body.access_token);
         } else {
           callback("could not generate access token: " + JSON.stringify(response));
