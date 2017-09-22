@@ -29,7 +29,6 @@ if (!PORT || !app.clientId || !app.clientSecret) {
  * Simple library that wraps the Stride REST API
  */
 var stride = require('./stride')(app);
-var sampleMessages = require('./sampleMessages')();
 
 /**
  * This implementation doesn't make any assumption in terms of data store, frameworks used, etc.
@@ -37,6 +36,59 @@ var sampleMessages = require('./sampleMessages')();
  */
 var configStore = {};
 var installationStore = {};
+
+/**
+ * Securing your app with JWT
+ * --------------------------
+ * Whenever Stride makes a call to your app (webhook, glance, sidebar, bot), it passes a JSON Web Token (JWT).
+ * This token contains information about the context of the call (cloudId, conversationId, userId)
+ * This token is signed, and you should validate the signature, which guarantees that the call really comes from Stride.
+ * You validate the signature using the app's client secret.
+ *
+ * In this tutorial, the token validation is implemented as an Express middleware function which is executed
+ * in the call chain for every request the app receives from Stride.
+ * The function extracts the context of the call from the token and adds it to a local variable.
+ */
+
+function getJWT(req) {
+  //Extract the JWT token from the request
+  //Either from the "jwt" request parameter
+  //Or from the "authorization" header, as "Bearer xxx"
+  var encodedJwt = req.query['jwt']
+      || req.headers['authorization'].substring(7)
+      || req.headers['Authorization'].substring(7);
+
+  // Decode the base64-encoded token, which contains the context of the call
+  var decodedJwt = jwtUtil.decode(encodedJwt, null, true);
+
+  var jwt = {encoded: encodedJwt, decoded: decodedJwt};
+  return jwt;
+}
+
+function validateJWT(req, res, next) {
+  try {
+
+    var jwt = getJWT(req);
+
+    var conversationId = jwt.decoded.context.resourceId;
+    var cloudId = jwt.decoded.context.cloudId;
+    var userId = jwt.decoded.sub;
+
+    // Validate the token signature using the app's OAuth secret (created in DAC App Management)
+    // (to ensure the call comes from Stride)
+    jwtUtil.decode(jwt.encoded, app.clientSecret);
+
+    //all good, it's from Stride, add the context to a local variable
+    res.locals.context = {cloudId: cloudId, conversationId: conversationId, userId: userId};
+
+    // Continue with the rest of the call chain
+    console.log('Valid JWT');
+    next();
+  } catch (err) {
+    console.log('Invalid JWT');
+    res.sendStatus(403);
+  }
+}
 
 /**
  * Installation lifecycle
@@ -57,14 +109,22 @@ express.post('/installed',
       var conversationId = req.body.resourceId;
       var userId = req.body.userId;
 
+      // if you want to know what the user Id is for your bot, you can find it in the JWT included in the request:
+      var jwt = getJWT(req).decoded;
+      var botId = jwt.sub;
+
       //Store the installation details
       if (!installationStore[conversationId]) {
         installationStore[conversationId] = {
           cloudId: cloudId,
           conversationId: conversationId,
-          installedBy: userId
+          installedBy: userId,
+          botId: botId
         }
       }
+
+      console.log(JSON.stringify(installationStore[conversationId]));
+
       res.sendStatus(200);
 
       //Send a message to the conversation to announce the app is ready
@@ -90,50 +150,6 @@ express.post('/uninstalled',
     }
 );
 
-/**
- * Securing your app with JWT
- * --------------------------
- * Whenever Stride makes a call to your app (webhook, glance, sidebar, bot), it passes a JSON Web Token (JWT).
- * This token contains information about the context of the call (cloudId, conversationId, userId)
- * This token is signed, and you should validate the signature, which guarantees that the call really comes from Stride.
- * You validate the signature using the app's client secret.
- *
- * In this tutorial, the token validation is implemented as an Express middleware function which is executed
- * in the call chain for every request the app receives from Stride.
- * The function extracts the context of the call from the token and adds it to a local variable.
- */
-
-function validateJWT(req, res, next) {
-  try {
-
-    //Extract the JWT token from the request
-    //Either from the "jwt" request parameter
-    //Or from the "authorization" header, as "Bearer xxx"
-    var encodedJwt = req.query['jwt']
-        || req.headers['authorization'].substring(7)
-        || req.headers['Authorization'].substring(7);
-
-    // Decode the base64-encoded token, which contains the context of the call
-    var jwt = jwtUtil.decode(encodedJwt, null, true);
-    var conversationId = jwt.context.resourceId;
-    var cloudId = jwt.context.cloudId;
-    var userId = jwt.sub;
-
-    // Validate the token signature using the app's OAuth secret (created in DAC App Management)
-    // (to ensure the call comes from Stride)
-    jwtUtil.decode(encodedJwt, app.clientSecret);
-
-    //all good, it's from Stride, add the context to a local variable
-    res.locals.context = {cloudId: cloudId, conversationId: conversationId, userId: userId};
-
-    // Continue with the rest of the call chain
-    console.log('Valid JWT');
-    next();
-  } catch (err) {
-    console.log('Invalid JWT');
-    res.sendStatus(403);
-  }
-}
 
 /**
  * chat:bot
@@ -149,7 +165,6 @@ function validateJWT(req, res, next) {
  *   }
  * ]
  *
- * Check out sampleMessages.js to see how the message sent as a reply to this mention is constructed
  */
 
 express.post('/bot-mention',
@@ -211,13 +226,35 @@ express.post('/bot-mention',
       }
 
       function extractMentionsFromMessage(next) {
+
+        doc = new Document();
+
+        const paragraph = doc.paragraph()
+            .text('The following people were mentioned: ');
         // Here's how to extract the list of users who were mentioned in this message
-        var reply = "Users who were mentioned in that message: ";
         var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
+
         mentionNodes.forEach(function (mentionNode) {
-          reply += mentionNode.attrs.text + ' (ID: ' + mentionNode.attrs.id + ') ';
+
+          var userId = mentionNode.attrs.id;
+          var userMentionText = mentionNode.attrs.text;
+
+          //how to find if the user mentioned is the bot (check out the installation lifecycle implementation above,
+          //that's when the ID of the bot user is sent to the app
+          var botId = installationStore[conversationId].botId;
+          if(botId) {
+            if (botId === mentionNode.attrs.id) {
+              userMentionText += " (The bot)"
+            }
+          }
+
+          // and how to add mentions to a message
+          //If you don't know the user's mention text, call the User API - stride.getUser()
+          paragraph.mention(userId, userMentionText);
         });
-        stride.sendTextReply(req.body, reply, function (err, response) {
+
+        var reply = doc.toJSON();
+        stride.sendDocumentReply(req.body, reply, function (err, response) {
           next();
         });
       }
@@ -225,7 +262,6 @@ express.post('/bot-mention',
       function sendMessageWithFormatting(next) {
         stride.sendTextReply(req.body, "Sending a message with plenty of formatting...", function (err, response) {
           // Here's how to send a reply with a nicely formatted document, using the document builder library adf-builder
-          // you can construct this JSON document manually instead, see sampleMessages.js for an example
           const doc = new Document();
           doc.paragraph()
               .text('Here is some ')

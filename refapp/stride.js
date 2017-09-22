@@ -11,8 +11,9 @@ module.exports = function (app) {
    * Get an access token from the Atlassian Identity API
    */
   function getAccessToken(callback) {
+
     if(!token || Date.now() > token.refresh_time) {
-      //No token yet, or token about to expire
+      //No token yet, token expired or about to expire
       //Generate a new token
       var options = {
         uri: AUTH_API_BASE_URL + '/oauth/token',
