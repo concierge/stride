@@ -235,23 +235,23 @@ express.post('/bot-mention',
         var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
 
         mentionNodes.forEach(function (mentionNode) {
+              var userId = mentionNode.attrs.id;
+              var userMentionText = mentionNode.attrs.text;
 
-          var userId = mentionNode.attrs.id;
-          var userMentionText = mentionNode.attrs.text;
+              //how to find if the user mentioned is the bot (check out the installation lifecycle implementation above,
+              //that's when the ID of the bot user is sent to the app
+              if (installationStore[conversationId]) {
+                var botId = installationStore[conversationId].botId;
+                if (botId === mentionNode.attrs.id) {
+                  userMentionText += " (The bot)"
+                }
+              }
 
-          //how to find if the user mentioned is the bot (check out the installation lifecycle implementation above,
-          //that's when the ID of the bot user is sent to the app
-          var botId = installationStore[conversationId].botId;
-          if(botId) {
-            if (botId === mentionNode.attrs.id) {
-              userMentionText += " (The bot)"
+              // and how to add mentions to a message
+              //If you don't know the user's mention text, call the User API - stride.getUser()
+              paragraph.mention(userId, userMentionText);
             }
-          }
-
-          // and how to add mentions to a message
-          //If you don't know the user's mention text, call the User API - stride.getUser()
-          paragraph.mention(userId, userMentionText);
-        });
+        );
 
         var reply = doc.toJSON();
         stride.sendDocumentReply(req.body, reply, function (err, response) {
