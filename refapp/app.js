@@ -109,17 +109,13 @@ express.post('/installed',
       var conversationId = req.body.resourceId;
       var userId = req.body.userId;
 
-      // if you want to know what the user Id is for your bot, you can find it in the JWT included in the request:
-      var jwt = getJWT(req).decoded;
-      var botId = jwt.sub;
 
       //Store the installation details
       if (!installationStore[conversationId]) {
         installationStore[conversationId] = {
           cloudId: cloudId,
           conversationId: conversationId,
-          installedBy: userId,
-          botId: botId
+          installedBy: userId
         }
       }
 
@@ -183,7 +179,7 @@ express.post('/bot-mention',
 
         //Now let's do all the things:
         convertMessageToPlainText(function () {
-          extractMentionsFromMessage(function () {
+          extractAndSendMentions(function () {
             getUserDetails(function () {
               sendMessageWithFormatting(function () {
                 sendMessageWithImage(function () {
@@ -225,7 +221,7 @@ express.post('/bot-mention',
         });
       }
 
-      function extractMentionsFromMessage(next) {
+      function extractAndSendMentions(next) {
 
         doc = new Document();
 
@@ -234,20 +230,11 @@ express.post('/bot-mention',
         // Here's how to extract the list of users who were mentioned in this message
         var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
 
+        // and how to mention users
         mentionNodes.forEach(function (mentionNode) {
+
               var userId = mentionNode.attrs.id;
               var userMentionText = mentionNode.attrs.text;
-
-              //how to find if the user mentioned is the bot (check out the installation lifecycle implementation above,
-              //that's when the ID of the bot user is sent to the app
-              if (installationStore[conversationId]) {
-                var botId = installationStore[conversationId].botId;
-                if (botId === mentionNode.attrs.id) {
-                  userMentionText += " (The bot)"
-                }
-              }
-
-              // and how to add mentions to a message
               //If you don't know the user's mention text, call the User API - stride.getUser()
               paragraph.mention(userId, userMentionText);
             }
