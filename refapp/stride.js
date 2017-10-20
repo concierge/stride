@@ -1,5 +1,4 @@
 var request = require('request');
-var jwtUtil = require('jwt-simple');
 
 module.exports = function (app) {
   var API_BASE_URL = app.environment == "production" ? 'https://api.atlassian.com' : 'https://api.stg.atlassian.com';

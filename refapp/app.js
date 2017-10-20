@@ -4,7 +4,6 @@ const expressLib = require('express');
 const bodyParser = require('body-parser');
 const jwtUtil = require('jwt-simple');
 const http = require('http');
-const request = require('request');
 const cors = require('cors');
 const jsonpath = require('jsonpath');
 const express = expressLib();
