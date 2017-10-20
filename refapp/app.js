@@ -12,13 +12,8 @@ express.use(bodyParser.json());
 express.use(bodyParser.urlencoded({extended: true}));
 express.use(expressLib.static('.'));
 
-const PORT = process.env.PORT;
-const app = {};
-app.clientId = process.env.CLIENT_ID;
-app.clientSecret = process.env.CLIENT_SECRET;
-app.environment = process.env.ENV ? process.env.ENV : "production";
-
-if (!PORT || !app.clientId || !app.clientSecret) {
+const { PORT = 8000, CLIENT_ID, CLIENT_SECRET, ENV = 'production' } = process.env
+if (!CLIENT_ID || !CLIENT_SECRET) {
   console.log ("Usage:");
   console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> node app.js");
   process.exit();
@@ -27,7 +22,11 @@ if (!PORT || !app.clientId || !app.clientSecret) {
 /**
  * Simple library that wraps the Stride REST API
  */
-const stride = require('./stride')(app);
+const stride = require('./stride')({
+    clientId: CLIENT_ID,
+    clientSecret: CLIENT_SECRET,
+    environment: ENV,
+});
 
 /**
  * This implementation doesn't make any assumption in terms of data store, frameworks used, etc.
@@ -75,10 +74,10 @@ function validateJWT(req, res, next) {
 
     // Validate the token signature using the app's OAuth secret (created in DAC App Management)
     // (to ensure the call comes from Stride)
-    jwtUtil.decode(jwt.encoded, app.clientSecret);
+    jwtUtil.decode(jwt.encoded, CLIENT_SECRET);
 
     //all good, it's from Stride, add the context to a local variable
-    res.locals.context = {cloudId: cloudId, conversationId: conversationId, userId: userId};
+    res.locals.context = {cloudId, conversationId, userId};
 
     // Continue with the rest of the call chain
     console.log('Valid JWT');
@@ -104,16 +103,14 @@ function validateJWT(req, res, next) {
 express.post('/installed',
     function (req, res) {
       console.log('app installed in a conversation');
-      const cloudId = req.body.cloudId;
+      const { cloudId, userId } = req.body;
       const conversationId = req.body.resourceId;
-      const userId = req.body.userId;
-
 
       // Store the installation details
       if (!installationStore[conversationId]) {
         installationStore[conversationId] = {
-          cloudId: cloudId,
-          conversationId: conversationId,
+          cloudId,
+          conversationId,
           installedBy: userId
         }
       }
@@ -133,9 +130,7 @@ express.post('/installed',
 express.post('/uninstalled',
     function (req, res) {
       console.log('app uninstalled from a conversation');
-      const cloudId = req.body.cloudId;
       const conversationId = req.body.resourceId;
-      const userId = req.body.userId;
 
       // Remove the installation details
       installationStore[conversationId] = null;
@@ -165,7 +160,7 @@ express.post('/bot-mention',
     validateJWT,
     function (req, res) {
       console.log('bot mention');
-      const cloudId = req.body.cloudId;
+      const { cloudId } = req.body;
       const conversationId = req.body.conversation.id;
       const senderId = req.body.message.sender.id;
 
@@ -220,8 +215,7 @@ express.post('/bot-mention',
       }
 
       function extractAndSendMentions(next) {
-
-        doc = new Document();
+        const doc = new Document();
 
         const paragraph = doc.paragraph()
             .text('The following people were mentioned: ');
@@ -423,11 +417,7 @@ express.get('/module/config/content',
     function (req, res) {
       const conversationId = res.locals.context.conversationId;
       console.log("getting config content for conversation " + conversationId);
-      const config = configStore[res.locals.context.conversationId];
-      if (!config)
-        config = {
-          notificationLevel: "NONE"
-        }
+      const config = configStore[res.locals.context.conversationId] || { notificationLevel: "NONE" };
       res.send(JSON.stringify(config));
     });
 
