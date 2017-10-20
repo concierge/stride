@@ -1,20 +1,20 @@
-var _ = require('lodash');
-var fs = require('fs');
-var expressLib = require('express');
-var bodyParser = require('body-parser');
-var jwtUtil = require('jwt-simple');
-var http = require('http');
-var request = require('request');
-var cors = require('cors');
-var jsonpath = require('jsonpath');
-var express = expressLib();
-var { Document } = require('adf-builder');
+const _ = require('lodash');
+const fs = require('fs');
+const expressLib = require('express');
+const bodyParser = require('body-parser');
+const jwtUtil = require('jwt-simple');
+const http = require('http');
+const request = require('request');
+const cors = require('cors');
+const jsonpath = require('jsonpath');
+const express = expressLib();
+const { Document } = require('adf-builder');
 express.use(bodyParser.json());
 express.use(bodyParser.urlencoded({extended: true}));
 express.use(expressLib.static('.'));
 
-var PORT = process.env.PORT;
-var app = {};
+const PORT = process.env.PORT;
+const app = {};
 app.clientId = process.env.CLIENT_ID;
 app.clientSecret = process.env.CLIENT_SECRET;
 app.environment = process.env.ENV ? process.env.ENV : "production";
@@ -28,14 +28,14 @@ if (!PORT || !app.clientId || !app.clientSecret) {
 /**
  * Simple library that wraps the Stride REST API
  */
-var stride = require('./stride')(app);
+const stride = require('./stride')(app);
 
 /**
  * This implementation doesn't make any assumption in terms of data store, frameworks used, etc.
  * It doesn't have proper persistence, everything is just stored in memory.
  */
-var configStore = {};
-var installationStore = {};
+const configStore = {};
+const installationStore = {};
 
 /**
  * Securing your app with JWT
@@ -54,25 +54,25 @@ function getJWT(req) {
   //Extract the JWT token from the request
   //Either from the "jwt" request parameter
   //Or from the "authorization" header, as "Bearer xxx"
-  var encodedJwt = req.query['jwt']
+  const encodedJwt = req.query['jwt']
       || req.headers['authorization'].substring(7)
       || req.headers['Authorization'].substring(7);
 
   // Decode the base64-encoded token, which contains the context of the call
-  var decodedJwt = jwtUtil.decode(encodedJwt, null, true);
+  const decodedJwt = jwtUtil.decode(encodedJwt, null, true);
 
-  var jwt = {encoded: encodedJwt, decoded: decodedJwt};
+  const jwt = {encoded: encodedJwt, decoded: decodedJwt};
   return jwt;
 }
 
 function validateJWT(req, res, next) {
   try {
 
-    var jwt = getJWT(req);
+    const jwt = getJWT(req);
 
-    var conversationId = jwt.decoded.context.resourceId;
-    var cloudId = jwt.decoded.context.cloudId;
-    var userId = jwt.decoded.sub;
+    const conversationId = jwt.decoded.context.resourceId;
+    const cloudId = jwt.decoded.context.cloudId;
+    const userId = jwt.decoded.sub;
 
     // Validate the token signature using the app's OAuth secret (created in DAC App Management)
     // (to ensure the call comes from Stride)
@@ -105,9 +105,9 @@ function validateJWT(req, res, next) {
 express.post('/installed',
     function (req, res) {
       console.log('app installed in a conversation');
-      var cloudId = req.body.cloudId;
-      var conversationId = req.body.resourceId;
-      var userId = req.body.userId;
+      const cloudId = req.body.cloudId;
+      const conversationId = req.body.resourceId;
+      const userId = req.body.userId;
 
 
       //Store the installation details
@@ -128,16 +128,15 @@ express.post('/installed',
         if (err)
           console.log(err);
       });
-
     }
 );
 
 express.post('/uninstalled',
     function (req, res) {
       console.log('app uninstalled from a conversation');
-      var cloudId = req.body.cloudId;
-      var conversationId = req.body.resourceId;
-      var userId = req.body.userId;
+      const cloudId = req.body.cloudId;
+      const conversationId = req.body.resourceId;
+      const userId = req.body.userId;
 
       //Remove the installation details
       installationStore[conversationId] = null;
@@ -167,9 +166,9 @@ express.post('/bot-mention',
     validateJWT,
     function (req, res) {
       console.log('bot mention');
-      var cloudId = req.body.cloudId;
-      var conversationId = req.body.conversation.id;
-      var senderId = req.body.message.sender.id;
+      const cloudId = req.body.cloudId;
+      const conversationId = req.body.conversation.id;
+      const senderId = req.body.message.sender.id;
 
       stride.sendTextReply(req.body, "OK, I'm on it!", function (err, response) {
 
@@ -199,7 +198,7 @@ express.post('/bot-mention',
 
           //The message is in req.body.message. It is sent using the Atlassian document format.
           //A plain text representation is available in req.body.message.text
-          var messageText = req.body.message.text;
+          const messageText = req.body.message.text;
           console.log("Message in plain text: " + messageText);
 
           //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
@@ -211,7 +210,7 @@ express.post('/bot-mention',
                 .text("In plain text, it looks like this:");
             doc.paragraph()
                 .text('"' + response + '"');
-            var reply = doc.toJSON();
+            const reply = doc.toJSON();
 
             stride.sendDocumentReply(req.body, reply, function (err, response) {
               console.log(response);
@@ -228,19 +227,19 @@ express.post('/bot-mention',
         const paragraph = doc.paragraph()
             .text('The following people were mentioned: ');
         // Here's how to extract the list of users who were mentioned in this message
-        var mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
+        const mentionNodes = jsonpath.query(req.body, '$..[?(@.type == "mention")]');
 
         // and how to mention users
         mentionNodes.forEach(function (mentionNode) {
 
-              var userId = mentionNode.attrs.id;
-              var userMentionText = mentionNode.attrs.text;
+              const userId = mentionNode.attrs.id;
+              const userMentionText = mentionNode.attrs.text;
               //If you don't know the user's mention text, call the User API - stride.getUser()
               paragraph.mention(userId, userMentionText);
             }
         );
 
-        var reply = doc.toJSON();
+        const reply = doc.toJSON();
         stride.sendDocumentReply(req.body, reply, function (err, response) {
           next();
         });
@@ -262,7 +261,7 @@ express.post('/bot-mention',
               .emoji(':rofl:')
               .emoji(':nerd:')
               .text(' and some code: ')
-              .code('var i = 0;')
+              .code('const i = 0;')
               .text(' and a bullet list');
           doc.bulletList()
               .textItem('With one bullet point')
@@ -271,7 +270,7 @@ express.post('/bot-mention',
               .paragraph()
               .text("and an info panel with some text, with some more code below");
           doc.codeBlock("javascript")
-              .text('var i = 0;\nwhile(true) {\n  i++;\n}');
+              .text('const i = 0;\nwhile(true) {\n  i++;\n}');
 
           doc
               .paragraph()
@@ -294,7 +293,7 @@ express.post('/bot-mention',
                 url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
                 label: 'Task'
               })
-          var reply = doc.toJSON();
+          const reply = doc.toJSON();
 
           stride.sendDocumentReply(req.body, reply, function (err, response) {
             console.log(response);
@@ -308,15 +307,15 @@ express.post('/bot-mention',
 
 
           // To send a file or an image in a message, you first need to upload it
-          var https = require('https');
-          var imgUrl = 'https://media.giphy.com/media/L12g7V0J62bf2/giphy.gif';
+          const https = require('https');
+          const imgUrl = 'https://media.giphy.com/media/L12g7V0J62bf2/giphy.gif';
           https.get(imgUrl, function (downloadStream) {
             stride.sendMedia(cloudId, conversationId, "an_image2.jpg", downloadStream, function (err, response) {
 
               if (response && JSON.parse(response).data) {
 
                 //Once uploaded, you can include it in a message
-                var mediaId = JSON.parse(response).data.id;
+                const mediaId = JSON.parse(response).data.id;
                 const doc = new Document();
                 doc.paragraph()
                     .text("and here's that image");
@@ -324,7 +323,7 @@ express.post('/bot-mention',
                     .mediaGroup()
                     .media({type: 'file', id: mediaId, collection: conversationId});
 
-                var reply = doc.toJSON();
+                const reply = doc.toJSON();
                 stride.sendDocumentReply(req.body, reply, function (err, response) {
                   console.log(response);
                   next();
@@ -409,10 +408,10 @@ express.get('/module/config/state',
     cors(),
     validateJWT,
     function (req, res) {
-      var conversationId = res.locals.context.conversationId;
+      const conversationId = res.locals.context.conversationId;
       console.log("getting config state for conversation " + conversationId);
-      var config = configStore[res.locals.context.conversationId];
-      var state = {configured: true};
+      const config = configStore[res.locals.context.conversationId];
+      const state = {configured: true};
       if (!config)
         state.configured = false;
       console.log("returning config state: " + JSON.stringify(state));
@@ -423,9 +422,9 @@ express.get('/module/config/state',
 express.get('/module/config/content',
     validateJWT,
     function (req, res) {
-      var conversationId = res.locals.context.conversationId;
+      const conversationId = res.locals.context.conversationId;
       console.log("getting config content for conversation " + conversationId);
-      var config = configStore[res.locals.context.conversationId];
+      const config = configStore[res.locals.context.conversationId];
       if (!config)
         config = {
           notificationLevel: "NONE"
@@ -437,8 +436,8 @@ express.get('/module/config/content',
 express.post('/module/config/content',
     validateJWT,
     function (req, res) {
-      var cloudId = res.locals.context.cloudId;
-      var conversationId = res.locals.context.conversationId;
+      const cloudId = res.locals.context.cloudId;
+      const conversationId = res.locals.context.conversationId;
       console.log("saving config content for conversation " + conversationId + ": " + JSON.stringify(req.body));
       configStore[conversationId] = req.body;
 
@@ -525,8 +524,8 @@ express.post('/ui/ping',
     validateJWT,
     function (req, res) {
       console.log('Received a call from the app frontend ' + JSON.stringify(req.body));
-      var cloudId = res.locals.context.cloudId;
-      var conversationId = res.locals.context.conversationId;
+      const cloudId = res.locals.context.cloudId;
+      const conversationId = res.locals.context.conversationId;
       stride.sendTextMessage(cloudId, conversationId, "Pong", function (err, response) {
         if (!err)
           res.send(JSON.stringify({status: "Pong"}));
@@ -546,8 +545,8 @@ express.post('/ui/ping',
 
 express.get('/descriptor', function (req, res) {
   fs.readFile('./app-descriptor.json', function (err, descriptorTemplate) {
-    var template = _.template(descriptorTemplate);
-    var descriptor = template({
+    const template = _.template(descriptorTemplate);
+    const descriptor = template({
       host: 'https://' + req.headers.host
     });
     res.set('Content-Type', 'application/json');
