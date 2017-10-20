@@ -110,7 +110,7 @@ express.post('/installed',
       const userId = req.body.userId;
 
 
-      //Store the installation details
+      // Store the installation details
       if (!installationStore[conversationId]) {
         installationStore[conversationId] = {
           cloudId: cloudId,
@@ -123,7 +123,7 @@ express.post('/installed',
 
       res.sendStatus(200);
 
-      //Send a message to the conversation to announce the app is ready
+      // Send a message to the conversation to announce the app is ready
       stride.sendTextMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function (err, response) {
         if (err)
           console.log(err);
@@ -138,7 +138,7 @@ express.post('/uninstalled',
       const conversationId = req.body.resourceId;
       const userId = req.body.userId;
 
-      //Remove the installation details
+      // Remove the installation details
       installationStore[conversationId] = null;
 
       res.sendStatus(204);
@@ -172,11 +172,11 @@ express.post('/bot-mention',
 
       stride.sendTextReply(req.body, "OK, I'm on it!", function (err, response) {
 
-        //If you don't send a 200, Stride will try to resend it
+        // If you don't send a 200, Stride will try to resend it
         res.sendStatus(200);
 
 
-        //Now let's do all the things:
+        // Now let's do all the things:
         convertMessageToPlainText(function () {
           extractAndSendMentions(function () {
             getUserDetails(function () {
@@ -196,12 +196,12 @@ express.post('/bot-mention',
 
         stride.sendTextReply(req.body, "Converting the message you just sent to plain text...", function (err, response) {
 
-          //The message is in req.body.message. It is sent using the Atlassian document format.
-          //A plain text representation is available in req.body.message.text
+          // The message is in req.body.message. It is sent using the Atlassian document format.
+          // A plain text representation is available in req.body.message.text
           const messageText = req.body.message.text;
           console.log("Message in plain text: " + messageText);
 
-          //You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
+          // You can also use a REST endpoint to convert any Atlassian document to a plain text representation:
           stride.convertDocToText(req.body.message.body, function (error, response) {
             console.log("Message converted to text: " + response)
 
@@ -234,7 +234,7 @@ express.post('/bot-mention',
 
               const userId = mentionNode.attrs.id;
               const userMentionText = mentionNode.attrs.text;
-              //If you don't know the user's mention text, call the User API - stride.getUser()
+              // If you don't know the user's mention text, call the User API - stride.getUser()
               paragraph.mention(userId, userMentionText);
             }
         );
@@ -314,7 +314,7 @@ express.post('/bot-mention',
 
               if (response && JSON.parse(response).data) {
 
-                //Once uploaded, you can include it in a message
+                // Once uploaded, you can include it in a message
                 const mediaId = JSON.parse(response).data.id;
                 const doc = new Document();
                 doc.paragraph()
@@ -346,7 +346,7 @@ express.post('/bot-mention',
 
       function updateGlance(next) {
         stride.sendTextReply(req.body, "Updating the glance state...", function (err, response) {
-          //Here's how to update the glance state
+          // Here's how to update the glance state
 
           stride.updateGlanceState(
               cloudId, conversationId, "refapp-glance", "Click me!!", function (err, response) {
