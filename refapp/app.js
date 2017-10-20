@@ -1,16 +1,13 @@
 const _ = require('lodash');
 const fs = require('fs');
-const expressLib = require('express');
+const express = require('express');
 const bodyParser = require('body-parser');
 const jwtUtil = require('jwt-simple');
 const http = require('http');
 const cors = require('cors');
 const jsonpath = require('jsonpath');
-const express = expressLib();
 const { Document } = require('adf-builder');
-express.use(bodyParser.json());
-express.use(bodyParser.urlencoded({extended: true}));
-express.use(expressLib.static('.'));
+
 
 const { PORT = 8000, CLIENT_ID, CLIENT_SECRET, ENV = 'production' } = process.env
 if (!CLIENT_ID || !CLIENT_SECRET) {
@@ -18,6 +15,13 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
   console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> node app.js");
   process.exit();
 }
+
+
+const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static('.'));
+
 
 /**
  * Simple library that wraps the Stride REST API
@@ -65,7 +69,6 @@ function getJWT(req) {
 
 function validateJWT(req, res, next) {
   try {
-
     const jwt = getJWT(req);
 
     const conversationId = jwt.decoded.context.resourceId;
@@ -100,7 +103,7 @@ function validateJWT(req, res, next) {
  * At installation, Stride sends the context of the installation: cloudId, conversationId, userId
  * You can store this information for later use.
  */
-express.post('/installed',
+app.post('/installed',
     function (req, res) {
       console.log('app installed in a conversation');
       const { cloudId, userId } = req.body;
@@ -127,7 +130,7 @@ express.post('/installed',
     }
 );
 
-express.post('/uninstalled',
+app.post('/uninstalled',
     function (req, res) {
       console.log('app uninstalled from a conversation');
       const conversationId = req.body.resourceId;
@@ -156,7 +159,7 @@ express.post('/uninstalled',
  *
  */
 
-express.post('/bot-mention',
+app.post('/bot-mention',
     validateJWT,
     function (req, res) {
       console.log('bot mention');
@@ -368,14 +371,14 @@ express.post('/bot-mention',
  * Note: webhooks will only fire for conversations your app is authorized to access
  */
 
-express.post('/conversation-updated',
+app.post('/conversation-updated',
     validateJWT,
     function (req, res) {
       console.log('A conversation was changed: ' + req.body.conversation.id + ', change: ' + req.body.action);
       res.sendStatus(200);
     });
 
-express.post('/roster-updated',
+app.post('/roster-updated',
     validateJWT,
     function (req, res) {
       console.log('A user joined or left a conversation: ' + req.body.conversation.id + ', change: ' + req.body.action);
@@ -389,14 +392,14 @@ express.post('/roster-updated',
  * TBD
  */
 
-express.get('/module/config',
+app.get('/module/config',
     validateJWT,
     function (req, res) {
       res.redirect("/app-module-config.html");
     });
 
 // Get the configuration state: is it configured or not for the conversation?
-express.get('/module/config/state',
+app.get('/module/config/state',
     // cross domain request
     cors(),
     validateJWT,
@@ -412,7 +415,7 @@ express.get('/module/config/state',
     });
 
 // Get the configuration content from the configuration dialog
-express.get('/module/config/content',
+app.get('/module/config/content',
     validateJWT,
     function (req, res) {
       const conversationId = res.locals.context.conversationId;
@@ -422,7 +425,7 @@ express.get('/module/config/content',
     });
 
 // Save the configuration content from the configuration dialog
-express.post('/module/config/content',
+app.post('/module/config/content',
     validateJWT,
     function (req, res) {
       const cloudId = res.locals.context.cloudId;
@@ -436,7 +439,7 @@ express.post('/module/config/content',
     });
 
 
-express.get('/module/dialog',
+app.get('/module/dialog',
     validateJWT,
     function (req, res) {
       res.redirect("/app-module-dialog.html");
@@ -468,7 +471,7 @@ express.get('/module/dialog',
  * Stride will then make sure glances are updated for all connected Stride users.
  **/
 
-express.get('/module/glance/state',
+app.get('/module/glance/state',
     // cross domain request
     cors(),
     validateJWT,
@@ -498,7 +501,7 @@ express.get('/module/glance/state',
  * 		]
  **/
 
-express.get('/module/sidebar',
+app.get('/module/sidebar',
     validateJWT,
     function (req, res) {
       res.redirect("/app-module-sidebar.html");
@@ -509,7 +512,7 @@ express.get('/module/sidebar',
  * You can find the context for the request (cloudId, conversationId) in the JWT token
  */
 
-express.post('/ui/ping',
+app.post('/ui/ping',
     validateJWT,
     function (req, res) {
       console.log('Received a call from the app frontend ' + JSON.stringify(req.body));
@@ -532,7 +535,7 @@ express.post('/ui/ping',
  * The variable ${host} is substituted based on the base URL of your app.
  */
 
-express.get('/descriptor', function (req, res) {
+app.get('/descriptor', function (req, res) {
   fs.readFile('./app-descriptor.json', function (err, descriptorTemplate) {
     const template = _.template(descriptorTemplate);
     const descriptor = template({
@@ -544,6 +547,6 @@ express.get('/descriptor', function (req, res) {
 });
 
 
-http.createServer(express).listen(PORT, function () {
+http.createServer(app).listen(PORT, function () {
   console.log('App running on port ' + PORT);
 });
