@@ -105,44 +105,40 @@ function validateJWT(req, res, next) {
  * At installation, Stride sends the context of the installation: cloudId, conversationId, userId
  * You can store this information for later use.
  */
-app.post('/installed',
-    function (req, res) {
-    console.log('app installed in a conversation');
-    const {cloudId, userId} = req.body;
-    const conversationId = req.body.resourceId;
+app.post('/installed', (req, res) => {
+  console.log('app installed in a conversation');
+  const {cloudId, userId} = req.body;
+  const conversationId = req.body.resourceId;
 
-    // Store the installation details
-    if (!installationStore[conversationId]) {
-      installationStore[conversationId] = {
-        cloudId,
-        conversationId,
-        installedBy: userId
-      }
+  // Store the installation details
+  if (!installationStore[conversationId]) {
+    installationStore[conversationId] = {
+      cloudId,
+      conversationId,
+      installedBy: userId
     }
-
-    console.log(JSON.stringify(installationStore[conversationId]));
-
-    res.sendStatus(200);
-
-    // Send a message to the conversation to announce the app is ready
-    stride.sendTextMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function (err, response) {
-      if (err)
-        console.log(err);
-    });
   }
-);
 
-app.post('/uninstalled',
-  function (req, res) {
-    console.log('app uninstalled from a conversation');
-    const conversationId = req.body.resourceId;
+  console.log(JSON.stringify(installationStore[conversationId]));
 
-    // Remove the installation details
-    installationStore[conversationId] = null;
+  res.sendStatus(200);
 
-    res.sendStatus(204);
-  }
-);
+  // Send a message to the conversation to announce the app is ready
+  stride.sendTextMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function (err, response) {
+    if (err)
+      console.log(err);
+  });
+});
+
+app.post('/uninstalled', (req, res) => {
+  console.log('app uninstalled from a conversation');
+  const conversationId = req.body.resourceId;
+
+  // Remove the installation details
+  installationStore[conversationId] = null;
+
+  res.sendStatus(204);
+});
 
 
 /**
@@ -163,7 +159,7 @@ app.post('/uninstalled',
 
 app.post('/bot-mention',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     console.log('bot mention');
     const {cloudId} = req.body;
     const conversationId = req.body.conversation.id;
@@ -192,7 +188,6 @@ app.post('/bot-mention',
     });
 
     function convertMessageToPlainText(next) {
-
       stride.sendTextReply(req.body, "Converting the message you just sent to plain text...", function (err, response) {
 
         // The message is in req.body.message. It is sent using the Atlassian document format.
@@ -303,7 +298,6 @@ app.post('/bot-mention',
     function sendMessageWithImage(next) {
       stride.sendTextReply(req.body, "Uploading an image and sending it in a message...", function (err, response) {
 
-
         // To send a file or an image in a message, you first need to upload it
         const https = require('https');
         const imgUrl = 'https://media.giphy.com/media/L12g7V0J62bf2/giphy.gif';
@@ -375,17 +369,19 @@ app.post('/bot-mention',
 
 app.post('/conversation-updated',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     console.log('A conversation was changed: ' + req.body.conversation.id + ', change: ' + req.body.action);
     res.sendStatus(200);
-  });
+  }
+);
 
 app.post('/roster-updated',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     console.log('A user joined or left a conversation: ' + req.body.conversation.id + ', change: ' + req.body.action);
     res.sendStatus(200);
-  });
+  }
+);
 
 /**
  * chat:configuration
@@ -396,16 +392,17 @@ app.post('/roster-updated',
 
 app.get('/module/config',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     res.redirect("/app-module-config.html");
-  });
+  }
+);
 
 // Get the configuration state: is it configured or not for the conversation?
 app.get('/module/config/state',
   // cross domain request
   cors(),
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     const conversationId = res.locals.context.conversationId;
     console.log("getting config state for conversation " + conversationId);
     const config = configStore[res.locals.context.conversationId];
@@ -414,22 +411,24 @@ app.get('/module/config/state',
       state.configured = false;
     console.log("returning config state: " + JSON.stringify(state));
     res.send(JSON.stringify(state));
-  });
+  }
+);
 
 // Get the configuration content from the configuration dialog
 app.get('/module/config/content',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     const conversationId = res.locals.context.conversationId;
     console.log("getting config content for conversation " + conversationId);
     const config = configStore[res.locals.context.conversationId] || {notificationLevel: "NONE"};
     res.send(JSON.stringify(config));
-  });
+  }
+);
 
 // Save the configuration content from the configuration dialog
 app.post('/module/config/content',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     const cloudId = res.locals.context.cloudId;
     const conversationId = res.locals.context.conversationId;
     console.log("saving config content for conversation " + conversationId + ": " + JSON.stringify(req.body));
@@ -438,14 +437,16 @@ app.post('/module/config/content',
     stride.updateConfigurationState(cloudId, conversationId, 'refapp-config', true, function (err, body) {
       res.sendStatus(204);
     })
-  });
+  }
+);
 
 
 app.get('/module/dialog',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     res.redirect("/app-module-dialog.html");
-  });
+  }
+);
 
 /**
  * chat:glance
@@ -477,14 +478,15 @@ app.get('/module/glance/state',
   // cross domain request
   cors(),
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     res.send(
       JSON.stringify({
         "label": {
           "value": "Click me!"
         }
       }));
-  });
+  }
+);
 
 /*
  * chat:sidebar
@@ -505,9 +507,10 @@ app.get('/module/glance/state',
 
 app.get('/module/sidebar',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     res.redirect("/app-module-sidebar.html");
-  });
+  }
+);
 
 /**
  * Making a call from the app front-end to the app back-end:
@@ -516,7 +519,7 @@ app.get('/module/sidebar',
 
 app.post('/ui/ping',
   validateJWT,
-  function (req, res) {
+  (req, res) => {
     console.log('Received a call from the app frontend ' + JSON.stringify(req.body));
     const cloudId = res.locals.context.cloudId;
     const conversationId = res.locals.context.conversationId;
@@ -537,8 +540,8 @@ app.post('/ui/ping',
  * The variable ${host} is substituted based on the base URL of your app.
  */
 
-app.get('/descriptor', function (req, res) {
-  fs.readFile('./app-descriptor.json', function (err, descriptorTemplate) {
+app.get('/descriptor', (req, res) => {
+  fs.readFile('./app-descriptor.json', (err, descriptorTemplate) => {
     const template = _.template(descriptorTemplate);
     const descriptor = template({
       host: 'https://' + req.headers.host
