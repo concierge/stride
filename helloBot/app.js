@@ -4,7 +4,7 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const API_BASE_URL = 'https://api.atlassian.com';
 
 if (!PORT || !CLIENT_ID || !CLIENT_SECRET) {
-  console.log ("Usage:");
+  console.log("Usage:");
   console.log("PORT=<http port> CLIENT_ID=<app client ID> CLIENT_SECRET=<app client secret> node app.js");
   process.exit();
 }
@@ -73,7 +73,7 @@ function sendMessage(cloudId, conversationId, messageTxt, callback) {
       }
 
       request(options, function (err, response, body) {
-          callback(err, body);
+        callback(err, body);
       });
     }
   });
@@ -86,7 +86,7 @@ function sendReply(message, replyTxt, callback) {
 
   sendMessage(cloudId, conversationId, replyTxt, function (err, response) {
     if (err) {
-      console.log ('Error sending message: ' + err);
+      console.log('Error sending message: ' + err);
       callback(err);
     } else {
       callback(null, response);
@@ -96,30 +96,30 @@ function sendReply(message, replyTxt, callback) {
 
 
 app.post('/installed',
-    function (req, res) {
-      console.log('app installed in a conversation');
-      const cloudId = req.body.cloudId;
-      const conversationId = req.body.resourceId;
-      sendMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function(err, response){
-        if(err)
-          console.log(err);
-      });
-      res.sendStatus(204);
-    }
+  function (req, res) {
+    console.log('app installed in a conversation');
+    const cloudId = req.body.cloudId;
+    const conversationId = req.body.resourceId;
+    sendMessage(cloudId, conversationId, "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message", function (err, response) {
+      if (err)
+        console.log(err);
+    });
+    res.sendStatus(204);
+  }
 );
 
 app.post('/bot-mention',
-    function (req, res) {
-      console.log('bot mention');
-      sendReply(req.body, "Hey, what's up? (Sorry, that's all I can do)", function (err, response) {
-        if (err) {
-          console.log(err);
-          res.sendStatus(500);
-        } else {
-          res.sendStatus(204);
-        }
-      });
-    }
+  function (req, res) {
+    console.log('bot mention');
+    sendReply(req.body, "Hey, what's up? (Sorry, that's all I can do)", function (err, response) {
+      if (err) {
+        console.log(err);
+        res.sendStatus(500);
+      } else {
+        res.sendStatus(204);
+      }
+    });
+  }
 );
 
 /**

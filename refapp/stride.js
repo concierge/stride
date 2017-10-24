@@ -6,12 +6,13 @@ module.exports = function (app) {
   var AUTH_API_BASE_URL = app.environment == "production" ? 'https://auth.atlassian.com' : 'https://atlassian-account-stg.pus2.auth0.com';
 
   var token = null;
+
   /**
    * Get an access token from the Atlassian Identity API
    */
   function getAccessToken(callback) {
 
-    if(!token || Date.now() > token.refresh_time) {
+    if (!token || Date.now() > token.refresh_time) {
       //No token yet, token expired or about to expire
       //Generate a new token
       var options = {
