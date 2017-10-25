@@ -1,7 +1,7 @@
 {
   "name": "banana-api-tutorial-simpleBot",
   "repository": "bitbucket:atlassian/stride-api-tutorial",
-  "description": "a sample app",
+  "description": "a sample full featured Stride app",
   "dependencies": {
     "@atlaskit/css-reset": "^1.1.4",
     "@atlaskit/reduced-ui-pack": "^5.5.0",
