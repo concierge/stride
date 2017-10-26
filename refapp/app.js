@@ -37,6 +37,7 @@ const stride = require('./stride').factory({
   env: ENV,
 });
 
+
 /**
  * This implementation doesn't make any assumption in terms of data store, frameworks used, etc.
  * It doesn't have proper persistence, everything is just stored in memory.
@@ -58,7 +59,7 @@ const installationStore = {};
  * You can store this information for later use.
  */
 app.post('/installed', (req, res, next) => {
-  console.log('app installed in a conversation');
+  console.log('- app installed in a conversation');
   const {cloudId, userId} = req.body;
   const conversationId = req.body.resourceId;
 
@@ -69,24 +70,24 @@ app.post('/installed', (req, res, next) => {
       conversationId,
       installedBy: userId,
     }
-    console.log('Persisted for this conversation:', prettify_json(installationStore[conversationId]));
+    console.log('  Persisted for this conversation:', prettify_json(installationStore[conversationId]));
   }
   else
-    console.log('Known data for this conversation:', prettify_json(installationStore[conversationId]));
+    console.log('  Known data for this conversation:', prettify_json(installationStore[conversationId]));
 
 
   // Send a message to the conversation to announce the app is ready
   stride.sendTextMessage({
       cloudId,
       conversationId,
-      text: "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message",
+      text: "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message.",
     })
     .then(() => res.sendStatus(200))
     .catch(next);
 });
 
 app.post('/uninstalled', (req, res) => {
-  console.log('app uninstalled from a conversation');
+  console.log('- app uninstalled from a conversation');
   const conversationId = req.body.resourceId;
 
   // note: we can't send message in the room anymore
@@ -117,7 +118,7 @@ app.post('/uninstalled', (req, res) => {
 app.post('/bot-mention',
   stride.validateJWT,
   (req, res, next) => {
-    console.log('* bot mention', prettify_json(req.body));
+    console.log('- bot mention', prettify_json(req.body));
     const reqBody = req.body;
     const {cloudId} = req.body;
     const conversationId = req.body.conversation.id;
@@ -134,12 +135,12 @@ app.post('/bot-mention',
       .then(sendMessageWithFormatting)
       .then(sendMessageWithImage)
       .then(updateGlance)
-      .then(() => demoRefAppFunctions({reqBody}))
+      .then(() => demoLowLevelFunctions({reqBody}))
       .then(allDone)
       .catch(next);
 
     async function convertMessageToPlainTextAndReportIt() {
-      console.log('  * convertMessageToPlainTextAndReportIt...');
+      console.log('  - convertMessageToPlainTextAndReportIt...');
 
       await stride.replyWithText({reqBody, text: "Converting the message you just sent to plain text..."});
 
@@ -154,8 +155,7 @@ app.post('/bot-mention',
 
       const doc = new Document();
       doc.paragraph()
-        .text("In plain text, it looks like this:");
-      doc.paragraph()
+        .text("In plain text, it looks like this: ")
         .text(`"${msgInText}"`);
       const document = doc.toJSON();
 
@@ -165,7 +165,7 @@ app.post('/bot-mention',
     }
 
     async function extractAndSendMentions() {
-      console.log('  * extractAndSendMentions...');
+      console.log('  - extractAndSendMentions...');
       const doc = new Document();
 
       const paragraph = doc.paragraph()
@@ -187,9 +187,9 @@ app.post('/bot-mention',
     }
 
     async function getAndReportUserDetails() {
-      await stride.replyWithText({reqBody, text: "Getting user details for the sender of the message"});
+      await stride.replyWithText({reqBody, text: "Getting user details for the sender of the message..."});
       user = await stride.getUser({cloudId, userId: senderId});
-      await stride.replyWithText({reqBody, text: "This message was sent by " + user.displayName});
+      await stride.replyWithText({reqBody, text: "This message was sent by: " + user.displayName});
 
       return user;
     }
@@ -272,7 +272,7 @@ app.post('/bot-mention',
               const mediaId = response.data.id;
               const doc = new Document();
               doc.paragraph()
-                .text("and here's that image");
+                .text("and here's that image:");
               doc
                 .mediaGroup()
                 .media({type: 'file', id: mediaId, collection: conversationId});
@@ -306,7 +306,7 @@ app.post('/bot-mention',
   }
 );
 
-async function demoRefAppFunctions({reqBody}) {
+async function demoLowLevelFunctions({reqBody}) {
   const cloudId = reqBody.cloudId;
   const conversationId = reqBody.conversation.id;
 
@@ -314,7 +314,7 @@ async function demoRefAppFunctions({reqBody}) {
   let createdConversation;
 
   await stride.replyWithText({reqBody, text: `That was nice, wasn't it?` });
-  await stride.replyWithText({reqBody, text: `Now let me walk you the lower level functions available in the tutorial "refapp":` });
+  await stride.replyWithText({reqBody, text: `Now let me walk you through the lower level functions available in the tutorial "refapp":` });
 
   await demo_sendTextMessage();
   await demo_sendMessage();

@@ -4,7 +4,6 @@
 const request = require('request')
 const jwtUtil = require('jwt-simple')
 
-// XXX
 const prettyjson = require('prettyjson');
 function prettify_json(data, options = {}) {
   return '{\n' + prettyjson.render(data, options) + '\n}'
@@ -328,7 +327,7 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
   }
 
   /**
-   * TODO
+   * TODO doc
    */
   async function updateConfigurationState({cloudId, conversationId, configKey, state}) {
     if (!cloudId)
@@ -452,7 +451,6 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
     return document
   }
 
-  // XXX not sure that works!
   async function reply({reqBody, document}) {
     if (!reqBody)
       throw new Error('Stride/reply: missing param reqBody!')
@@ -578,7 +576,7 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
       jwtUtil.decode(jwt.encoded, clientSecret)
 
       // all good, it's from Stride
-      logger.info(`- ${debugId}: JWT valid`/*, prettify_json({...logDetails})*/) // XXX
+      logger.info(`- ${debugId}: JWT valid`/*, prettify_json({...logDetails})*/)
 
       // if any, add the context to a local variable
       const conversationId = jwt.decoded.context.resourceId
@@ -597,9 +595,8 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
       next()
     } catch (err) {
       logger.warn(`! ${debugId}: Invalid JWT:` + err.message, prettify_json({...logDetails, err}))
-      // TODO clean that
-      //res.sendStatus(403) really??
-      next(err)
+      // a rogue call not frow a legitimate Stride client?
+      res.sendStatus(403)
     }
   }
 
