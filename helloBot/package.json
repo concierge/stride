@@ -1,7 +1,7 @@
 {
   "name": "banana-api-tutorial-simpleBot",
   "repository": "bitbucket:atlassian/stride-api-tutorial",
-  "description": "a sample app",
+  "description": "a sample basic Stride app",
   "dependencies": {
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
