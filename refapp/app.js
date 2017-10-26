@@ -69,10 +69,10 @@ app.post('/installed', (req, res, next) => {
       conversationId,
       installedBy: userId
     }
-    console.log('Persisted for this conversation:', JSON.stringify(installationStore[conversationId]));
+    console.log('Persisted for this conversation:', prettify_json(installationStore[conversationId]));
   }
   else
-    console.log('Known data for this conversation:', JSON.stringify(installationStore[conversationId]));
+    console.log('Known data for this conversation:', prettify_json(installationStore[conversationId]));
 
 
   // Send a message to the conversation to announce the app is ready
@@ -378,7 +378,7 @@ app.get('/module/config/state',
     const state = {configured: true};
     if (!config)
       state.configured = false;
-    console.log("returning config state: " + JSON.stringify(state));
+    console.log("returning config state: " + prettify_json(state));
     res.send(JSON.stringify(state));
   }
 );
@@ -400,7 +400,7 @@ app.post('/module/config/content',
   (req, res, next) => {
     const cloudId = res.locals.context.cloudId;
     const conversationId = res.locals.context.conversationId;
-    console.log("saving config content for conversation " + conversationId + ": " + JSON.stringify(req.body));
+    console.log("saving config content for conversation " + conversationId + ": " + prettify_json(req.body));
     configStore[conversationId] = req.body;
 
     stride.updateConfigurationState(cloudId, conversationId, 'refapp-config', true)
@@ -489,7 +489,7 @@ app.get('/module/sidebar',
 app.post('/ui/ping',
   stride.validateJWT,
   (req, res) => {
-    console.log('Received a call from the app frontend ' + JSON.stringify(req.body));
+    console.log('Received a call from the app frontend ' + prettify_json(req.body));
     const cloudId = res.locals.context.cloudId;
     const conversationId = res.locals.context.conversationId;
     stride.sendTextMessage(cloudId, conversationId, "Pong")
