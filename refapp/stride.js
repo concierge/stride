@@ -239,6 +239,7 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
     }
 
     return r2(options)
+      .then(JSON.parse)
   }
 
   /**
@@ -261,6 +262,7 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
     }
 
     return r2(options)
+      .then(JSON.parse)
   }
 
   /**
@@ -401,7 +403,6 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
    * Create a "document" containing a mention
    * @param text: ex. "Beware {{MENTION}}, I know where you live..."
    */
-  // TODO auto mention
   async function createDocMentioningUser({cloudId, userId, text}) {
     if (!cloudId)
       throw new Error('Stride/sendTextMessageMentioningUser: missing param cloudId!')
@@ -420,59 +421,60 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
       }
     }
 
-    const content = []
+    const paragraphContent = []
     const msgParts = text.split('{{MENTION}}')
     if (msgParts.length > 1) {
-      content.push({
+      paragraphContent.push({
         type: "text",
         text: msgParts.shift(),
       })
     }
 
     while(msgParts.length) {
-      content.push(mention)
-      content.push({
+      paragraphContent.push(mention)
+      paragraphContent.push({
         type: "text",
         text: msgParts.shift(),
       })
     }
 
-    const documentMessage = {
+    const document = {
       version: 1,
       type: "doc",
       content: [
         {
           type: "paragraph",
-          content,
+          content: paragraphContent,
         },
       ],
     }
 
-    return documentMessage
+    return document
   }
 
   // XXX not sure that works!
-  async function reply({message, document}) {
-    if (!message)
-      throw new Error('Stride/reply: missing param message!')
+  async function reply({reqBody, document}) {
+    if (!reqBody)
+      throw new Error('Stride/reply: missing param reqBody!')
     if (!document)
       throw new Error('Stride/reply: missing param document!')
+    if (!document.content || !Array.isArray(document.content))
+      throw new Error('Stride/reply: wrong message format!')
 
-    const cloudId = message.cloudId
-    const conversationId = message.conversation.id // not existing! XXX
+    const cloudId = reqBody.cloudId
+    const conversationId = reqBody.conversation.id
 
     return sendMessage({cloudId, conversationId, document})
   }
 
-  // XXX not sure that works!
-  async function replyWithText({message, text}) {
-    if (!message)
-      throw new Error('Stride/replyWithText: missing param message!')
+  async function replyWithText({reqBody, text}) {
+    if (!reqBody)
+      throw new Error('Stride/replyWithText: missing param reqBody!')
     if (!text)
       throw new Error('Stride/replyWithText: missing param text!')
 
-    const cloudId = message.cloudId
-    const conversationId = message.conversation.id // not existing! XXX
+    const cloudId = reqBody.cloudId
+    const conversationId = reqBody.conversation.id
 
     return sendTextMessage({cloudId, conversationId, text})
   }
@@ -485,6 +487,8 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
   async function convertDocToText(document) {
     if (!document)
       throw new Error('Stride/convertDocToText: missing param document!')
+    if (!document.content || !Array.isArray(document.content))
+      throw new Error('Stride/convertDocToText: wrong format!')
 
     const accessToken = await getAccessToken()
 

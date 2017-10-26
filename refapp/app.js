@@ -67,7 +67,7 @@ app.post('/installed', (req, res, next) => {
     installationStore[conversationId] = {
       cloudId,
       conversationId,
-      installedBy: userId
+      installedBy: userId,
     }
     console.log('Persisted for this conversation:', prettify_json(installationStore[conversationId]));
   }
@@ -82,7 +82,7 @@ app.post('/installed', (req, res, next) => {
       text: "Hi there! Thanks for adding me to this conversation. To see me in action, just mention me in a message",
     })
     .then(() => res.sendStatus(200))
-    .catch(next)
+    .catch(next);
 });
 
 app.post('/uninstalled', (req, res) => {
@@ -118,38 +118,30 @@ app.post('/bot-mention',
   stride.validateJWT,
   (req, res, next) => {
     console.log('* bot mention', prettify_json(req.body));
-    const message = req.body;
+    const reqBody = req.body;
     const {cloudId} = req.body;
     const conversationId = req.body.conversation.id;
-    const senderId = req.body.message.sender.id;
+    const senderId = req.body.sender.id;
 
-    /*showCase({cloudId, conversationId, message})
-      .then(() => res.sendStatus(200))*/
     let user; // see getAndReportUserDetails
-    stride.replyWithText({
-        message,
-        text: "OK, I'm on it!",
-      })
-      // If you don't send a 200, Stride will try to resend it
+    stride.replyWithText({reqBody, text: "OK, I'm on it!"})
+      // If you don't send a 200 fast enough, Stride will resend you the same mention message
       .then(() => res.sendStatus(200))
       // Now let's do all the things:
       .then(convertMessageToPlainTextAndReportIt)
       .then(extractAndSendMentions)
       .then(getAndReportUserDetails)
-      .then(sendPrivateMessage)
       .then(sendMessageWithFormatting)
       .then(sendMessageWithImage)
       .then(updateGlance)
+      .then(() => demoRefAppFunctions({reqBody}))
       .then(allDone)
       .catch(next);
 
     async function convertMessageToPlainTextAndReportIt() {
       console.log('  * convertMessageToPlainTextAndReportIt...');
 
-      await stride.replyWithText({
-        message,
-        text: "Converting the message you just sent to plain text...",
-      });
+      await stride.replyWithText({reqBody, text: "Converting the message you just sent to plain text..."});
 
       // The message is in req.body.message. It is sent using the Atlassian document format.
       // A plain text representation is available in req.body.message.text
@@ -167,7 +159,9 @@ app.post('/bot-mention',
         .text(`"${msgInText}"`);
       const document = doc.toJSON();
 
-      await stride.reply({message, document});
+      await stride.reply({reqBody, document});
+
+      return messageText;
     }
 
     async function extractAndSendMentions() {
@@ -189,35 +183,19 @@ app.post('/bot-mention',
       );
 
       const document = doc.toJSON();
-      await stride.reply({message, document});
+      await stride.reply({reqBody, document});
     }
 
     async function getAndReportUserDetails() {
-      await stride.replyWithText({message, text: "Getting user details for the sender of the message"});
+      await stride.replyWithText({reqBody, text: "Getting user details for the sender of the message"});
       user = await stride.getUser({cloudId, userId: senderId});
-      await stride.replyWithText({message, text: "This message was sent by " + user.displayName});
-    }
+      await stride.replyWithText({reqBody, text: "This message was sent by " + user.displayName});
 
-    async function sendPrivateMessage() {
-      await stride.replyWithText({message, text: "Now sending you a private message…"});
-      try {
-        await stride.sendPrivateMessage({
-          cloudId,
-          userId: senderId,
-          document: await stride.createDocMentioningUser({
-            cloudId,
-            userId: senderId,
-            text: 'Beware {{MENTION}}, I know where you live...',
-          })
-        })
-      }
-      catch (e) {
-        await stride.replyWithText({message, text: "Didn't work, but maybe you closed our private conversation? Try re-opening it... (please)"});
-      }
+      return user;
     }
 
     async function sendMessageWithFormatting() {
-      await stride.replyWithText({message, text: "Sending a message with plenty of formatting..."});
+      await stride.replyWithText({reqBody, text: "Sending a message with plenty of formatting..."});
 
       // Here's how to send a reply with a nicely formatted document, using the document builder library adf-builder
       const doc = new Document();
@@ -257,21 +235,21 @@ app.post('/bot-mention',
         .icon({
           url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
           label: 'Task'
-        })
+        });
       card.detail()
         .title('User')
         .text('Joe Blog')
         .icon({
           url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
           label: 'Task'
-        })
+        });
       const document = doc.toJSON();
 
-      await stride.reply({message, document});
+      await stride.reply({reqBody, document});
     }
 
     async function sendMessageWithImage() {
-      await stride.replyWithText({ message, text: "Uploading an image and sending it in a message..." });
+      await stride.replyWithText({reqBody, text: "Uploading an image and sending it in a message..." });
 
       // To send a file or an image in a message, you first need to upload it
       const https = require('https');
@@ -299,7 +277,7 @@ app.post('/bot-mention',
                 .mediaGroup()
                 .media({type: 'file', id: mediaId, collection: conversationId});
 
-              return stride.reply({message, document: doc.toJSON()})
+              return stride.reply({reqBody, document: doc.toJSON()})
             })
             .then(resolve, reject);
         });
@@ -307,7 +285,7 @@ app.post('/bot-mention',
     }
 
     async function updateGlance() {
-      await stride.replyWithText({ message, text: "Updating the glance state..." });
+      await stride.replyWithText({reqBody, text: "Updating the glance state..." });
 
       // Here's how to update the glance state
       const stateTxt = `Click me, ${user.displayName} !!`;
@@ -318,15 +296,205 @@ app.post('/bot-mention',
         stateTxt,
       });
       console.log("glance state updated to: " + stateTxt);
-      await stride.replyWithText({ message, text: `It should be updated to "${stateTxt}" -->` });
+      await stride.replyWithText({reqBody, text: `It should be updated to "${stateTxt}" -->` });
     }
 
     async function allDone() {
-      await stride.replyWithText({ message, text: "OK, I'm done. Thanks for watching!" });
+      await stride.replyWithText({reqBody, text: "OK, I'm done. Thanks for watching!" });
       console.log("all done.");
     }
   }
 );
+
+async function demoRefAppFunctions({reqBody}) {
+  const cloudId = reqBody.cloudId;
+  const conversationId = reqBody.conversation.id;
+
+  let user;
+  let createdConversation;
+
+  await stride.replyWithText({reqBody, text: `That was nice, wasn't it?` });
+  await stride.replyWithText({reqBody, text: `Now let me walk you the lower level functions available in the tutorial "refapp":` });
+
+  await demo_sendTextMessage();
+  await demo_sendMessage();
+  await demo_replyWithText();
+  await demo_reply();
+  await demo_getUser();
+  await demo_sendPrivateMessage();
+  await demo_getConversation();
+  await demo_createConversation();
+  await demo_archiveConversation();
+  await demo_getConversationHistory();
+  await demo_getConversationRoster();
+  await demo_createDocMentioningUser();
+  await demo_convertDocToText();
+
+  async function demo_sendTextMessage() {
+    console.log(`------------ sendTextMessage() ------------`);
+
+    await stride.sendTextMessage({cloudId, conversationId, text: `demo - sendTextMessage() - Hello, world!`});
+  }
+
+  async function demo_sendMessage() {
+    console.log(`------------ sendMessage() ------------`);
+
+    // using the Atlassian Document Format
+    // https://developer.atlassian.com/cloud/stride/apis/document/structure/
+    const exampleDocument = {
+      version: 1,
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: `demo - sendMessage() - Hello, world!`,
+            },
+          ]
+        }
+      ]
+    };
+    await stride.sendMessage({cloudId, conversationId, document: exampleDocument});
+  }
+
+  async function demo_replyWithText() {
+    console.log(`------------ replyWithText() ------------`);
+
+    await stride.replyWithText({reqBody, text: `demo - replyWithText() - Hello, world!`});
+  }
+
+  async function demo_reply() {
+    console.log(`------------ reply() ------------`);
+
+    await stride.reply({reqBody, document: stride.convertTextToDoc(`demo - reply() - Hello, world!`)});
+  }
+
+  async function demo_getUser() {
+    console.log(`------------ getUser() ------------`);
+
+    user = await stride.getUser({
+      cloudId,
+      userId: reqBody.sender.id,
+    });
+    console.log('getUser():', prettify_json(user));
+    await stride.replyWithText({reqBody, text: `demo - getUser() - your name is "${user.displayName}"` });
+    return user;
+  }
+
+  async function demo_sendPrivateMessage() {
+    console.log(`------------ sendPrivateMessage() ------------`);
+
+    await stride.replyWithText({reqBody, text: "demo - sendPrivateMessage() - sending you a private message…"});
+
+    try {
+      const document = await stride.createDocMentioningUser({
+        cloudId,
+        userId: user.id,
+        text: 'Hello {{MENTION}}, thanks for taking the Stride tutorial!',
+      });
+
+      await stride.sendPrivateMessage({
+        cloudId,
+        userId: user.id,
+        document,
+      });
+    }
+    catch (e) {
+      await stride.replyWithText({reqBody, text: "Didn't work, but maybe you closed our private conversation? Try re-opening it... (please ;)"});
+    }
+  }
+
+  async function demo_getConversation() {
+    console.log(`------------ getConversation() ------------`);
+
+    const conversation = await stride.getConversation({cloudId, conversationId});
+    console.log('getConversation():', prettify_json(conversation));
+
+    await stride.replyWithText({reqBody, text: `demo - getConversation() - current conversation name is "${conversation.name}"` });
+  }
+
+  async function demo_createConversation() {
+    console.log(`------------ createConversation() ------------`);
+    const candidateName = `Stride-tutorial-Conversation-${+new Date()}`;
+
+    const response = await stride.createConversation({cloudId, name: candidateName});
+    console.log('createConversation():', prettify_json(response));
+
+    createdConversation = await stride.getConversation({cloudId, conversationId: response.id});
+    await stride.sendTextMessage({cloudId, conversationId: createdConversation.id, text: `demo - createConversation() - Hello, conversation!`});
+
+    const doc = new Document();
+    doc.paragraph()
+      .text(`demo - createConversation() - conversation created with name "${createdConversation.name}". Find it `)
+      .link('here', createdConversation._links[createdConversation.id]);
+    await stride.reply({reqBody, document: doc.toJSON()});
+  }
+
+  async function demo_archiveConversation() {
+    console.log(`------------ archiveConversation() ------------`);
+
+    const response = await stride.archiveConversation({cloudId, conversationId: createdConversation.id});
+    console.log('archiveConversation():', prettify_json(response));
+
+    await stride.replyWithText({reqBody, text: `demo - archiveConversation() - archived conversation "${createdConversation.name}"` });
+  }
+
+  async function demo_getConversationHistory() {
+    console.log(`------------ getConversationHistory() ------------`);
+
+    const response = await stride.getConversationHistory({cloudId, conversationId});
+    console.log('getConversationHistory():', prettify_json(response));
+
+    await stride.replyWithText({reqBody, text: `demo - getConversationHistory() - seen ${response.messages.length} recent message(s)` });
+  }
+
+  async function demo_getConversationRoster() {
+    console.log(`------------ getConversationRoster() ------------`);
+
+    const response = await stride.getConversationRoster({cloudId, conversationId});
+    console.log('getConversationRoster():', prettify_json(response));
+
+    const userIds = response.values;
+    const users = await Promise.all(userIds.map(userId => stride.getUser({ cloudId, userId })))
+    console.log('getConversationRoster() - users():', prettify_json(users));
+
+    await stride.replyWithText({
+      reqBody,
+      text: `demo - getConversationRoster() - seen ${users.length} users: `
+        + users.map(user => user.displayName).join(', '),
+    });
+  }
+
+  async function demo_createDocMentioningUser() {
+    console.log(`------------ createDocMentioningUser() ------------`);
+
+    const document = await stride.createDocMentioningUser({
+      cloudId,
+      userId: user.id,
+      text: "demo - createDocMentioningUser() - See {{MENTION}}, I can do it!"
+    });
+
+    await stride.reply({reqBody, document});
+  }
+
+  async function demo_convertDocToText() {
+    console.log(`------------ convertDocToText() ------------`);
+
+    const doc = new Document();
+    doc.paragraph()
+      .text(`demo - convertDocToText() - this an ADF document with a link: `)
+      .link('https://www.atlassian.com/', 'https://www.atlassian.com/');
+
+    const document = doc.toJSON();
+    await stride.reply({reqBody, document});
+
+    const text = await stride.convertDocToText(document);
+
+    await stride.replyWithText({reqBody, text: text + ' <-- converted to text!'});
+  }
+}
 
 
 /**
@@ -339,7 +507,7 @@ app.post('/bot-mention',
 app.post('/conversation-updated',
   stride.validateJWT,
   (req, res) => {
-    console.log('A conversation was changed: ' + req.body.conversation.id + ', change: ' + req.body.action);
+    console.log('A conversation was changed: ' + req.body.conversation.id + ', change: ' + prettify_json(req.body.action));
     res.sendStatus(200);
   }
 );
@@ -347,7 +515,7 @@ app.post('/conversation-updated',
 app.post('/roster-updated',
   stride.validateJWT,
   (req, res) => {
-    console.log('A user joined or left a conversation: ' + req.body.conversation.id + ', change: ' + req.body.action);
+    console.log('A user joined or left a conversation: ' + req.body.conversation.id + ', change: ' + prettify_json(req.body.action));
     res.sendStatus(200);
   }
 );
