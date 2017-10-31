@@ -301,7 +301,7 @@ app.post('/ui/ping',
     console.log('Received a call from the app frontend ' + prettify_json(req.body));
     const cloudId = res.locals.context.cloudId;
     const conversationId = res.locals.context.conversationId;
-    stride.sendTextMessage(cloudId, conversationId, "Pong")
+    stride.sendTextMessage({cloudId, conversationId, text: "Pong"})
       .then(() => res.send(JSON.stringify({status: "Pong"})))
       .catch(() => res.send(JSON.stringify({status: "Failed"})))
   }
