@@ -23,12 +23,12 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
 
       request(options, (err, response, body) => {
         if (err) {
-          logger.error(`! ${debugId}: request failed! details =`, prettify_json({...logDetails, err}))
+          logger.error(`! ${debugId}: request failed! details =`, prettify_json({logDetails, err}))
           return reject(err)
         }
 
         if (!response || response.statusCode >= 399) {
-          logger.error(`! ${debugId}: request failed with an error response! details =`, prettify_json({...logDetails, responseBody: response.body, err}))
+          logger.error(`! ${debugId}: request failed with an error response! details =`, prettify_json({logDetails, responseBody: response.body, err}))
           return reject(new Error('Request failed'))
         }
 
@@ -581,7 +581,7 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
       const userId = jwt.decoded.sub
 
       logDetails = {
-        ...logDetails,
+        logDetails,
         cloudId,
         conversationId,
         userId,
@@ -591,7 +591,7 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
       // Continue with the rest of the call chain
       next()
     } catch (err) {
-      logger.warn(`! ${debugId}: Invalid JWT:` + err.message, prettify_json({...logDetails, err}))
+      logger.warn(`! ${debugId}: Invalid JWT:` + err.message, prettify_json({logDetails, err}))
       // a rogue call not frow a legitimate Stride client?
       res.sendStatus(403)
     }
