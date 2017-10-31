@@ -213,7 +213,7 @@ app.post('/module/config/content',
     console.log("saving config content for conversation " + conversationId + ": " + prettify_json(req.body));
     configStore[conversationId] = req.body;
 
-    stride.updateConfigurationState(cloudId, conversationId, 'refapp-config', true)
+    stride.updateConfigurationState({cloudId, conversationId, configKey: 'refapp-config', state: true})
       .then(() => res.sendStatus(204))
       .catch(next);
   }

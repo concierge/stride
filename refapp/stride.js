@@ -11,8 +11,6 @@ function prettify_json(data, options = {}) {
 
 function factory({clientId, clientSecret, env = 'development', debugId = 'stride.js', logger = console}) {
   const API_BASE_URL = env === "production" ? 'https://api.atlassian.com' : 'https://api.stg.atlassian.com'
-  const API_AUDIENCE = env === "production" ? "api.atlassian.com" : "api.stg.atlassian.com"
-  const AUTH_API_BASE_URL = env === "production" ? 'https://auth.atlassian.com' : 'https://atlassian-account-stg.pus2.auth0.com'
 
   // a light async wrapper around request
   function r2(options) {
@@ -57,13 +55,12 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
 
     // Generate a new token
     const request_options = {
-      uri: AUTH_API_BASE_URL + '/oauth/token',
+      uri: API_BASE_URL + '/oauth/token',
       method: 'POST',
       json: {
         grant_type: "client_credentials",
         client_id: clientId,
-        client_secret: clientSecret,
-        "audience": API_AUDIENCE
+        client_secret: clientSecret
       }
     }
 
