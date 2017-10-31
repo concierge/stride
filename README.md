@@ -4,7 +4,7 @@ This repo is the companion code to the Stride tutorial:
 1. https://developer.atlassian.com/cloud/stride/getting-started/
 2. https://developer.atlassian.com/cloud/stride/learning/explore-refapp/
 
-**node 8+ required** This code uses the cool features of recent JavaScript💛. For a quick refresh: https://devhints.io/es6
+**node 8 ** This code uses the cool features of recent JavaScript💛. For a quick refresh: https://devhints.io/es6
 
 
 #### Reference documentation:
