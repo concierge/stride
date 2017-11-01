@@ -26,6 +26,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('.'));
+app.use(cors());
 
 
 /**
@@ -307,6 +308,18 @@ app.post('/ui/ping',
   }
 );
 
+app.post('/module/action/do-something',
+  cors(),
+  stride.validateJWT,
+  (req, res) => {
+    console.log('Received a call from an action in a message' + prettify_json(req.body));
+    const cloudId = res.locals.context.cloudId;
+    const conversationId = res.locals.context.conversationId;
+    stride.sendTextMessage({cloudId, conversationId, text: "A button was clicked!"})
+      .then(() => res.send(JSON.stringify({})));
+  }
+);
+
 
 /**
  * Your app has a descriptor (app-descriptor.json), which tells Stride about the modules it uses.
@@ -345,6 +358,7 @@ async function showCaseHighLevelFeatures({reqBody}) {
   await extractAndSendMentions()
   await getAndReportUserDetails()
   await sendMessageWithFormatting()
+  await sendMessageWithAction()
   await sendMessageWithImage()
   await updateGlance()
 
@@ -452,9 +466,43 @@ async function showCaseHighLevelFeatures({reqBody}) {
         url: 'https://ecosystem.atlassian.net/secure/viewavatar?size=xsmall&avatarId=15318&avatarType=issuetype',
         label: 'Task'
       });
+
     const document = doc.toJSON();
 
     await stride.reply({reqBody, document});
+  }
+
+  async function sendMessageWithAction() {
+
+    await stride.replyWithText({reqBody, text: "Sending a message with actions..."});
+    var document = {
+      "version": 1,
+      "type": "doc",
+      "content": [
+      {
+        "type": "applicationCard",
+        "attrs": {
+          "text": "This is a card",
+          "title": {
+            "text": "This is a card"
+          },
+          "actions": [{
+            "title":"with an action",
+            "target": {
+              "key": "refapp-action-openDialog"
+            }
+          },{
+            "title":"actually two",
+            "target": {
+              "key": "refapp-action-callService"
+            }
+          }]
+        }
+      }
+    ]
+    };
+    await stride.reply({reqBody, document});
+
   }
 
   async function sendMessageWithImage() {

@@ -539,9 +539,13 @@ function factory({clientId, clientSecret, env = 'development', debugId = 'stride
     // Extract the JWT token from the request
     // Either from the "jwt" request parameter
     // Or from the "authorization" header, as "Bearer xxx"
-    const encodedJwt = req.query['jwt']
+    var encodedJwt = req.query['jwt']
       || req.headers['authorization'].substring(7)
       || req.headers['Authorization'].substring(7)
+
+    //TEMP FIX FOR BUG
+    if (req.headers['authorization'] && !req.headers['authorization'].startsWith('Bearer'))
+      encodedJwt = req.headers['authorization'];
 
     if  (!encodedJwt)
       throw new Error('Stride/getJWT: expected encoded JWT not found!')

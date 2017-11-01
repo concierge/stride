@@ -149,6 +149,21 @@
         "url": "/roster-updated"
       }
 
+    ],
+    "chat:actionTarget" : [
+      {
+        "key": "refapp-action-openDialog",
+        "openDialog": {
+          "key": "refapp-dialog"
+        }
+      },
+      {
+        "key": "refapp-action-callService",
+        "callService": {
+          "url": "/module/action/do-something"
+        }
+      }
+
     ]
   }
 }
