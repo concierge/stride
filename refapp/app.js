@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const cors = require('cors');
 const jsonpath = require('jsonpath');
-const {Document} = require('adf-builder');
+const Document = require('adf-builder').Document;
 const prettyjson = require('prettyjson');
 
 function prettify_json(data, options = {}) {
@@ -61,7 +61,8 @@ const installationStore = {};
  */
 app.post('/installed', (req, res, next) => {
   console.log('- app installed in a conversation');
-  const {cloudId, userId} = req.body;
+  const cloudId = req.body.cloudId;
+  const userId = req.body.userId;
   const conversationId = req.body.resourceId;
 
   // Store the installation details
@@ -71,10 +72,10 @@ app.post('/installed', (req, res, next) => {
       conversationId,
       installedBy: userId,
     }
-    console.log('  Persisted for this conversation:', prettify_json(installationStore[conversationId]));
+    console.log('  App installed in this conversation:', prettify_json(installationStore[conversationId]));
   }
   else
-    console.log('  Known data for this conversation:', prettify_json(installationStore[conversationId]));
+    console.log('  App already installed in conversation:', prettify_json(installationStore[conversationId]));
 
 
   // Send a message to the conversation to announce the app is ready
@@ -308,14 +309,16 @@ app.post('/ui/ping',
   }
 );
 
-app.post('/module/action/do-something',
+app.post('/module/action/refapp-service',
   cors(),
   stride.validateJWT,
   (req, res) => {
     console.log('Received a call from an action in a message' + prettify_json(req.body));
     const cloudId = res.locals.context.cloudId;
     const conversationId = res.locals.context.conversationId;
-    stride.sendTextMessage({cloudId, conversationId, text: "A button was clicked!"})
+    const parameters = req.body.parameters;
+    stride.sendTextMessage({cloudId, conversationId,
+      text: "A button was clicked! The following parameters were passed: " + JSON.stringify(parameters)})
       .then(() => res.send(JSON.stringify({})));
   }
 );
@@ -450,8 +453,7 @@ async function showCaseHighLevelFeatures({reqBody}) {
       .text("And a card");
     const card = doc.applicationCard('With a title')
       .link('https://www.atlassian.com')
-      .description('With some description, and a couple of attributes')
-      .background('https://www.atlassian.com');
+      .description('With some description, and a couple of attributes');
     card.detail()
       .title('Type')
       .text('Task')
@@ -481,13 +483,14 @@ async function showCaseHighLevelFeatures({reqBody}) {
     const card = doc.applicationCard('Another card')
       .link('https://www.atlassian.com')
       .description('With some description, and a couple of actions')
-      .background('https://www.atlassian.com');
+      //.background('/img/card-background.jpg');
     card.action()
       .title("Open Dialog")
       .target({key: "refapp-action-openDialog"});
     card.action()
       .title("Call Service")
-      .target({key: "refapp-action-callService"});
+      .target({key: "refapp-action-callService"})
+      .parameters({"param1": "value1"});
     card.action()
       .title("Open Sidebar")
       .target({key: "refapp-action-openSidebar"});

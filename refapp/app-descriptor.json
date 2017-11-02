@@ -160,7 +160,7 @@
       {
         "key": "refapp-action-callService",
         "callService": {
-          "url": "/module/action/do-something"
+          "url": "/module/action/refapp-service"
         }
       },
       {
