@@ -122,6 +122,8 @@ app.post('/bot-mention',
   (req, res, next) => {
     console.log('- bot mention', prettify_json(req.body));
     const reqBody = req.body;
+    const host = req.headers.host;
+    reqBody.host = host;
 
     let user; // see getAndReportUserDetails
     stride.replyWithText({reqBody, text: "OK, I'm on it!"})
@@ -352,7 +354,7 @@ app.use(function errorHandler(err, req, res, next) {
 
 
 async function showCaseHighLevelFeatures({reqBody}) {
-  const {cloudId} = reqBody;
+  const cloudId = reqBody.cloudId;
   const conversationId = reqBody.conversation.id;
   const senderId = reqBody.sender.id;
   let user;
@@ -483,7 +485,7 @@ async function showCaseHighLevelFeatures({reqBody}) {
     const card = doc.applicationCard('Another card')
       .link('https://www.atlassian.com')
       .description('With some description, and a couple of actions')
-      //.background('/img/card-background.jpg');
+      .background('https://' + reqBody.host + '/img/card-background.jpg');
     card.action()
       .title("Open Dialog")
       .target({key: "refapp-action-openDialog"});
@@ -494,6 +496,8 @@ async function showCaseHighLevelFeatures({reqBody}) {
     card.action()
       .title("Open Sidebar")
       .target({key: "refapp-action-openSidebar"});
+    card.context("A footer")
+      .icon({url: "https://image.ibb.co/fPPAB5/Stride_White_On_Blue.png", label:"Stride"});
 
     const document = doc.toJSON();
 
@@ -502,7 +506,7 @@ async function showCaseHighLevelFeatures({reqBody}) {
   }
 
   async function sendMessageWithImage() {
-    await stride.replyWithText({reqBody, text: "Uploading an image and sending it in a message..." });
+    await stride.replyWithText({reqBody, text: "Uploading an image..." });
 
     // To send a file or an image in a message, you first need to upload it
     const https = require('https');
