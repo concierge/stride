@@ -475,32 +475,25 @@ async function showCaseHighLevelFeatures({reqBody}) {
   async function sendMessageWithAction() {
 
     await stride.replyWithText({reqBody, text: "Sending a message with actions..."});
-    var document = {
-      "version": 1,
-      "type": "doc",
-      "content": [
-      {
-        "type": "applicationCard",
-        "attrs": {
-          "text": "This is a card",
-          "title": {
-            "text": "This is a card"
-          },
-          "actions": [{
-            "title":"with an action",
-            "target": {
-              "key": "refapp-action-openDialog"
-            }
-          },{
-            "title":"actually two",
-            "target": {
-              "key": "refapp-action-callService"
-            }
-          }]
-        }
-      }
-    ]
-    };
+
+    const doc = new Document();
+
+    const card = doc.applicationCard('Another card')
+      .link('https://www.atlassian.com')
+      .description('With some description, and a couple of actions')
+      .background('https://www.atlassian.com');
+    card.action()
+      .title("Open Dialog")
+      .target({key: "refapp-action-openDialog"});
+    card.action()
+      .title("Call Service")
+      .target({key: "refapp-action-callService"});
+    card.action()
+      .title("Open Sidebar")
+      .target({key: "refapp-action-openSidebar"});
+
+    const document = doc.toJSON();
+
     await stride.reply({reqBody, document});
 
   }

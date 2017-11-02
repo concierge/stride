@@ -24,7 +24,7 @@
         "name": {
           "value": "Open App Dialog"
         },
-        "target": "refapp-dialog"
+        "target": "refapp-action-openDialog"
       }
     ],
     "chat:dialog": [
@@ -111,7 +111,7 @@
           "url": "/img/logo.png",
           "url@2x": "/img/logo.png"
         },
-        "target": "refapp-sidebar",
+        "target": "refapp-action-openSidebar",
         "queryUrl": "/module/glance/state",
         "authentication": "jwt"
       }
@@ -122,7 +122,7 @@
         "name": {
           "value": "Send to Dialog"
         },
-        "target": "refapp-dialog"
+        "target": "refapp-action-openDialog"
       }
     ],
     "chat:configuration" : [
@@ -161,6 +161,12 @@
         "key": "refapp-action-callService",
         "callService": {
           "url": "/module/action/do-something"
+        }
+      },
+      {
+        "key": "refapp-action-openSidebar",
+        "openSidebar": {
+          "key": "refapp-sidebar"
         }
       }
 
