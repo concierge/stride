@@ -56,6 +56,12 @@
               "name": {
                 "value": "Open Sidebar"
               }
+            },
+            {
+              "key": "action-disableButton",
+              "name": {
+                "value": "Disable Button"
+              }
             }
           ]
         },

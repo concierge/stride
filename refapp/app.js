@@ -319,6 +319,51 @@ app.post('/module/action/refapp-service',
     const cloudId = res.locals.context.cloudId;
     const conversationId = res.locals.context.conversationId;
     const parameters = req.body.parameters;
+    var response = {
+      message: "Done!"
+    };
+    if(parameters.then) {
+      if(parameters.then === 'open sidebar') {
+        response.nextAction = {
+          target: {
+            key: "refapp-action-openSidebar"
+          }
+        }
+      }
+      if(parameters.then === 'open dialog') {
+        response.nextAction = {
+          target: {
+            openDialog: {
+              key: "refapp-dialog"
+            }
+          }
+        }
+      }
+      if(parameters.then === 'open conversation') {
+        response.nextAction = {
+          target: {
+            openConversation: {
+              conversationId: parameters.conversationId
+            }
+          }
+        }
+      }
+      if(parameters.then === 'open highlights') {
+        response.nextAction = {
+          target: {
+            openHighlights: {}
+          }
+        }
+      }
+      if(parameters.then === 'open files and links') {
+        response.nextAction = {
+          target: {
+            openFilesAndLinks: {}
+          }
+        }
+      }
+    }
+    res.send(JSON.stringify(response));
     stride.sendTextMessage({cloudId, conversationId,
       text: "A button was clicked! The following parameters were passed: " + JSON.stringify(parameters)})
       .then(() => res.send(JSON.stringify({})));
@@ -492,7 +537,11 @@ async function showCaseHighLevelFeatures({reqBody}) {
     card.action()
       .title("Call Service")
       .target({key: "refapp-action-callService"})
-      .parameters({"param1": "value1"});
+      .parameters({then: "done"});
+    card.action()
+      .title("Call Service then open sidebar")
+      .target({key: "refapp-action-callService"})
+      .parameters({then: "open sidebar"})
     card.action()
       .title("Open Sidebar")
       .target({key: "refapp-action-openSidebar"});

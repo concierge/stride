@@ -19,6 +19,7 @@
 
   <script>
     $(document).ready(function(){
+
       AP.register({
 
         "message-action-fired" : function(source, target, context, parameters) {
@@ -68,6 +69,34 @@
             );
             closeDialog(false);
           }
+
+          /**
+           * Disable the primary button for a second
+           */
+          if (event.action === "action-disableButton") {
+
+            function enablePrimaryButton(enabled) {
+              var dialogOptions = {
+                options: {
+                  "primaryAction": {
+                    "key": "action-appendMessage",
+                    "name": {
+                      "value": "Append Message"
+                    },
+                    "enabled": enabled
+                  }
+                }
+              };
+              AP.dialog.update(dialogOptions);
+            }
+
+            enablePrimaryButton(false);
+            setTimeout(function(){
+              enablePrimaryButton(true);
+            }, 1000);
+            closeDialog(false);
+          }
+
 
           if (event.action === "action-close") {
             closeDialog(true);
