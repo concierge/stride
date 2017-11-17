@@ -26,8 +26,6 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('.'));
-app.use(cors());
-
 
 /**
  * Simple library that wraps the Stride REST API
@@ -311,6 +309,7 @@ app.post('/ui/ping',
   }
 );
 
+app.options('/module/action/refapp-service', cors());
 app.post('/module/action/refapp-service',
   cors(),
   stride.validateJWT,
