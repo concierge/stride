@@ -1,0 +1,4 @@
+{
+  "missing client id": "A client id must be setup in the configuration file.",
+  "missing client secret": "A client secret must be setup in the configuration file."
+}

@@ -1,0 +1,12 @@
+{
+  "name":"stride",
+  "version": 1.0,
+  "startup": "stride.js",
+  "type": "integration",
+  "config": [
+    ["botName", "Name of the bot", "Concierge"],
+    ["clientId", "Client id for the bot", ""],
+    ["clientSecret", "Client secret for the bot", ""],
+    ["port", "Port for webserver", "8181"]
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "baseUrl": "https://49d7fca7.ngrok.io",
+  "key": "Concierge",
+  "lifecycle": {
+    "installed": "/installed"
+  },
+
+  "modules": {
+    "chat:bot": [
+      {
+        "key": "Concierge",
+        "mention": {
+          "url": "/bot-mention"
+        },
+        "directMessage": {
+          "url": "/bot-mention"
+        }
+      }
+    ]
+  }
+}
+
